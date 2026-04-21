@@ -2,20 +2,31 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 
 const pageUrl = (n) => `/pages/${String(n).padStart(3, '0')}.webp`
 
+// Mapping des niveaux de zoom vers leurs classes CSS
+const ZOOM_CLASS = {
+  normal: '',
+  medium: 'zoom-medium',
+  large: 'zoom-large'
+}
+
 export default function Reader({
   pdfPage, totalPages, surah,
   onPageChange, onOpenIndex, onOpenBookmarks, onOpenSettings,
-  onAddBookmark, bookmarks,
-  immersive, onToggleImmersive
+  onAddBookmark, bookmarks, notes, onSaveNote,
+  zoomLevel, onCycleZoom, autoHide
 }) {
   const [showControls, setShowControls] = useState(true)
   const [jumpInput, setJumpInput] = useState('')
   const [showJump, setShowJump] = useState(false)
   const [toast, setToast] = useState(null)
-  const containerRef = useRef(null)
-  const imgRef = useRef(null)
+  const [showNoteEditor, setShowNoteEditor] = useState(false)
+  const [noteText, setNoteText] = useState('')
+  const pageStageRef = useRef(null)
   const touchStart = useRef(null)
+  const autoHideTimer = useRef(null)
+  const toastTimer = useRef(null)
 
+  // Pré-chargement des pages voisines
   useEffect(() => {
     const preload = (n) => {
       if (n < 1 || n > totalPages) return
@@ -27,6 +38,27 @@ export default function Reader({
     preload(pdfPage + 2)
   }, [pdfPage, totalPages])
 
+  // Masquage auto après inactivité
+  const scheduleAutoHide = useCallback(() => {
+    if (autoHideTimer.current) clearTimeout(autoHideTimer.current)
+    if (!autoHide) return
+    autoHideTimer.current = setTimeout(() => {
+      setShowControls(false)
+    }, 3000)
+  }, [autoHide])
+
+  useEffect(() => {
+    if (showControls) scheduleAutoHide()
+    return () => {
+      if (autoHideTimer.current) clearTimeout(autoHideTimer.current)
+    }
+  }, [showControls, scheduleAutoHide])
+
+  // À chaque changement de page, rendre les contrôles visibles
+  useEffect(() => {
+    setShowControls(true)
+  }, [pdfPage])
+
   const goPrev = useCallback(() => {
     if (pdfPage > 1) onPageChange(pdfPage - 1)
   }, [pdfPage, onPageChange])
@@ -35,6 +67,7 @@ export default function Reader({
     if (pdfPage < totalPages) onPageChange(pdfPage + 1)
   }, [pdfPage, totalPages, onPageChange])
 
+  // SWIPE uniquement sur la page centrale (pas sur les barres)
   const onTouchStart = (e) => {
     if (e.touches.length > 1) { touchStart.current = null; return }
     const t = e.touches[0]
@@ -49,19 +82,26 @@ export default function Reader({
     const dt = Date.now() - touchStart.current.time
     touchStart.current = null
 
+    // Swipe horizontal clair
     if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5 && dt < 500) {
       if (dx < 0) goNext()
       else goPrev()
-    } else if (Math.abs(dx) < 10 && Math.abs(dy) < 10 && dt < 300) {
+    }
+    // Tap simple sur la page : toggle les contrôles
+    else if (Math.abs(dx) < 10 && Math.abs(dy) < 10 && dt < 300) {
       setShowControls(s => !s)
     }
   }
 
+  // Navigation clavier
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === 'ArrowLeft') goNext()
       else if (e.key === 'ArrowRight') goPrev()
-      else if (e.key === 'Escape') setShowJump(false)
+      else if (e.key === 'Escape') {
+        setShowJump(false)
+        setShowNoteEditor(false)
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -77,17 +117,33 @@ export default function Reader({
     }
   }
 
-  const doAddBookmark = () => {
-    onAddBookmark()
-    setToast('Marque-page ajouté')
-    setTimeout(() => setToast(null), 1800)
+  const showToast = (msg) => {
+    setToast(msg)
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast(null), 1800)
   }
 
-  const handleToggleImmersive = () => {
-    onToggleImmersive()
-    // Quand on active l'immersive, on masque automatiquement les barres
-    // Quand on le désactive, on les remontre
-    setShowControls(s => immersive ? true : false)
+  const doAddBookmark = () => {
+    onAddBookmark()
+    showToast('Marque-page ajouté')
+  }
+
+  const openNoteEditor = () => {
+    const existing = notes[pdfPage]
+    setNoteText(existing?.text || '')
+    setShowNoteEditor(true)
+  }
+
+  const saveNote = () => {
+    onSaveNote(pdfPage, noteText)
+    setShowNoteEditor(false)
+    showToast(noteText.trim() ? 'Note enregistrée' : 'Note supprimée')
+  }
+
+  const deleteCurrentNote = () => {
+    onSaveNote(pdfPage, '')
+    setShowNoteEditor(false)
+    showToast('Note supprimée')
   }
 
   const printedPage = surah
@@ -95,15 +151,12 @@ export default function Reader({
     : null
   const rubNumber = pdfPage > 362 ? 4 : pdfPage > 242 ? 3 : pdfPage > 114 ? 2 : 1
   const isBookmarked = bookmarks.some(b => b.page === pdfPage)
+  const hasNote = !!notes[pdfPage]
+  const zoomLabel = zoomLevel === 'normal' ? 'Zoom' : zoomLevel === 'medium' ? 'Zoom +' : 'Zoom ++'
 
   return (
-    <div
-      ref={containerRef}
-      className={`reader ${immersive ? 'immersive' : ''}`}
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
-    >
-      {/* Barre supérieure */}
+    <div className={`reader zoom-${zoomLevel}`}>
+      {/* Barre supérieure — zone de tap dédiée */}
       <header className={`reader-header ${showControls ? 'visible' : 'hidden'}`}>
         <button className="btn-icon" onClick={onOpenIndex} aria-label="Sommaire">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -113,7 +166,7 @@ export default function Reader({
           </svg>
         </button>
 
-        <div className="reader-title">
+        <div className="reader-title" onClick={() => setShowJump(true)}>
           {surah && (
             <>
               <div className="surah-name-ar arabic">{surah.name_ar}</div>
@@ -126,19 +179,16 @@ export default function Reader({
 
         <div className="header-actions">
           <button
-            className={`btn-icon ${immersive ? 'active' : ''}`}
-            onClick={handleToggleImmersive}
-            aria-label={immersive ? "Quitter le plein écran" : "Plein écran"}
+            className={`btn-icon ${zoomLevel !== 'normal' ? 'active' : ''}`}
+            onClick={onCycleZoom}
+            aria-label={zoomLabel}
           >
-            {immersive ? (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M16 21v-3a2 2 0 0 1 2-2h3" />
-              </svg>
-            ) : (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 7V3h4M17 3h4v4M21 17v4h-4M7 21H3v-4" />
-              </svg>
-            )}
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              <line x1="11" y1="8" x2="11" y2="14" />
+              <line x1="8" y1="11" x2="14" y2="11" />
+            </svg>
           </button>
           <button className="btn-icon" onClick={onOpenSettings} aria-label="Réglages">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -154,10 +204,14 @@ export default function Reader({
         </div>
       </header>
 
-      {/* Page centrale */}
-      <div className="page-stage">
+      {/* Page centrale — seule zone swipe-sensible */}
+      <div
+        ref={pageStageRef}
+        className="page-stage"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
         <img
-          ref={imgRef}
           key={pdfPage}
           className="page-image page-transition"
           src={pageUrl(pdfPage)}
@@ -165,6 +219,22 @@ export default function Reader({
           draggable={false}
         />
       </div>
+
+      {/* Indicateur de note en coin si note existe pour cette page */}
+      {hasNote && (
+        <button
+          className={`note-indicator ${showControls ? 'visible' : 'hidden'}`}
+          onClick={openNoteEditor}
+          aria-label="Note de cette page"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" fill="var(--paper-cream)" />
+            <line x1="8" y1="13" x2="16" y2="13" stroke="var(--paper-cream)" />
+            <line x1="8" y1="17" x2="13" y2="17" stroke="var(--paper-cream)" />
+          </svg>
+        </button>
+      )}
 
       {/* Barre inférieure */}
       <footer className={`reader-footer ${showControls ? 'visible' : 'hidden'}`}>
@@ -180,6 +250,19 @@ export default function Reader({
           {printedPage !== null && (
             <div className="page-printed">Rub` {rubNumber} · page {printedPage}</div>
           )}
+        </button>
+
+        <button
+          className={`btn-note ${hasNote ? 'active' : ''}`}
+          onClick={openNoteEditor}
+          aria-label="Note"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill={hasNote ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" fill="none" stroke={hasNote ? 'var(--paper-cream)' : 'currentColor'} />
+            <line x1="8" y1="13" x2="16" y2="13" stroke={hasNote ? 'var(--paper-cream)' : 'currentColor'} />
+            <line x1="8" y1="17" x2="13" y2="17" stroke={hasNote ? 'var(--paper-cream)' : 'currentColor'} />
+          </svg>
         </button>
 
         <button
@@ -223,6 +306,50 @@ export default function Reader({
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Modal éditeur de note */}
+      {showNoteEditor && (
+        <div className="modal-backdrop" onClick={() => setShowNoteEditor(false)}>
+          <div className="note-modal" onClick={e => e.stopPropagation()}>
+            <header className="note-modal-header">
+              <div>
+                <h3>Note</h3>
+                <div className="note-modal-meta">
+                  {surah && <span className="arabic">{surah.name_ar}</span>}
+                  <span>Page {pdfPage}</span>
+                </div>
+              </div>
+              <button className="btn-icon" onClick={() => setShowNoteEditor(false)} aria-label="Fermer">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </header>
+            <textarea
+              className="note-textarea"
+              value={noteText}
+              onChange={e => setNoteText(e.target.value)}
+              placeholder="Vos réflexions, questions, mémorisation…"
+              autoFocus
+              rows={8}
+            />
+            <div className="note-actions">
+              {hasNote && (
+                <button className="btn-danger" onClick={deleteCurrentNote}>
+                  Supprimer
+                </button>
+              )}
+              <button className="btn-secondary" onClick={() => setShowNoteEditor(false)}>
+                Annuler
+              </button>
+              <button className="btn-primary" onClick={saveNote}>
+                Enregistrer
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
