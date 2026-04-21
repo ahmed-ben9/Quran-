@@ -1,7 +1,13 @@
 import { useEffect } from 'react'
 
-export default function Settings({ theme, onThemeChange, keepAwake, onKeepAwakeChange, onClose }) {
-  // Empêcher le scroll du body quand le modal est ouvert
+export default function Settings({
+  theme, onThemeChange,
+  keepAwake, onKeepAwakeChange,
+  zoomLevel, onZoomLevelChange,
+  autoHide, onAutoHideChange,
+  notesCount, onOpenNotes,
+  onClose
+}) {
   useEffect(() => {
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -22,6 +28,7 @@ export default function Settings({ theme, onThemeChange, keepAwake, onKeepAwakeC
         </header>
 
         <div className="settings-body">
+          {/* THÈME */}
           <section className="settings-section">
             <h3>Apparence</h3>
             <p className="settings-hint">Choisir le thème de lecture</p>
@@ -39,8 +46,6 @@ export default function Settings({ theme, onThemeChange, keepAwake, onKeepAwakeC
                     <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
                     <line x1="1" y1="12" x2="3" y2="12" />
                     <line x1="21" y1="12" x2="23" y2="12" />
-                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
                   </svg>
                 </div>
                 <span>Clair</span>
@@ -74,9 +79,83 @@ export default function Settings({ theme, onThemeChange, keepAwake, onKeepAwakeC
             </div>
           </section>
 
+          {/* ZOOM */}
+          <section className="settings-section">
+            <h3>Taille de la page</h3>
+            <p className="settings-hint">Niveau de zoom pour la lecture</p>
+            <div className="zoom-options">
+              <button
+                className={`zoom-option ${zoomLevel === 'normal' ? 'active' : ''}`}
+                onClick={() => onZoomLevelChange('normal')}
+              >
+                <div className="zoom-preview zoom-preview-normal">
+                  <div className="zoom-page">
+                    <div className="zoom-page-lines">
+                      <span></span><span></span><span></span><span></span>
+                    </div>
+                  </div>
+                </div>
+                <span>Normal</span>
+                <small>Page entière</small>
+              </button>
+
+              <button
+                className={`zoom-option ${zoomLevel === 'medium' ? 'active' : ''}`}
+                onClick={() => onZoomLevelChange('medium')}
+              >
+                <div className="zoom-preview zoom-preview-medium">
+                  <div className="zoom-page medium">
+                    <div className="zoom-page-lines">
+                      <span></span><span></span><span></span><span></span>
+                    </div>
+                  </div>
+                </div>
+                <span>Moyen</span>
+                <small>Zoom léger</small>
+              </button>
+
+              <button
+                className={`zoom-option ${zoomLevel === 'large' ? 'active' : ''}`}
+                onClick={() => onZoomLevelChange('large')}
+              >
+                <div className="zoom-preview zoom-preview-large">
+                  <div className="zoom-page large">
+                    <div className="zoom-page-lines">
+                      <span></span><span></span><span></span><span></span>
+                    </div>
+                  </div>
+                </div>
+                <span>Grand</span>
+                <small>Texte maximal</small>
+              </button>
+            </div>
+            <p className="settings-hint" style={{ marginTop: 10 }}>
+              Vous pouvez aussi changer rapidement via l'icône loupe en haut.
+            </p>
+          </section>
+
+          {/* LECTURE */}
           <section className="settings-section">
             <h3>Lecture</h3>
+
             <label className="settings-toggle">
+              <div className="toggle-info">
+                <div className="toggle-label">Masquer les barres automatiquement</div>
+                <div className="toggle-hint">
+                  Après 3 secondes d'inactivité — touchez la page pour les faire revenir
+                </div>
+              </div>
+              <div className={`toggle-switch ${autoHide ? 'on' : ''}`}>
+                <input
+                  type="checkbox"
+                  checked={autoHide}
+                  onChange={e => onAutoHideChange(e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </div>
+            </label>
+
+            <label className="settings-toggle" style={{ marginTop: 16 }}>
               <div className="toggle-info">
                 <div className="toggle-label">Garder l'écran allumé</div>
                 <div className="toggle-hint">
@@ -94,6 +173,27 @@ export default function Settings({ theme, onThemeChange, keepAwake, onKeepAwakeC
             </label>
           </section>
 
+          {/* NOTES */}
+          <section className="settings-section">
+            <h3>Mes notes</h3>
+            <button className="settings-row" onClick={onOpenNotes}>
+              <div className="row-info">
+                <div className="row-label">Consulter mes notes</div>
+                <div className="row-hint">
+                  {notesCount === 0
+                    ? "Aucune note pour l'instant"
+                    : notesCount === 1
+                    ? "1 note enregistrée"
+                    : `${notesCount} notes enregistrées`}
+                </div>
+              </div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="row-arrow">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </section>
+
+          {/* À PROPOS */}
           <section className="settings-section settings-about">
             <h3>À propos</h3>
             <p className="about-text">
