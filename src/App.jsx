@@ -18,7 +18,7 @@ const STORAGE_KEYS = {
   downloaded: 'quran.downloaded',
   theme: 'quran.theme',
   keepAwake: 'quran.keepAwake',
-  zoomLevel: 'quran.zoomLevel',
+  zoomed: 'quran.zoomed',
   autoHide: 'quran.autoHide'
 }
 
@@ -34,7 +34,6 @@ const storage = {
   }
 }
 
-// Seuil d'inactivité pour proposer "Reprendre" (30 min)
 const RESUME_THRESHOLD_MS = 30 * 60 * 1000
 
 export default function App() {
@@ -46,33 +45,30 @@ export default function App() {
   const [downloaded, setDownloaded] = useState(() => storage.get(STORAGE_KEYS.downloaded, false))
   const [theme, setTheme] = useState(() => storage.get(STORAGE_KEYS.theme, 'auto'))
   const [keepAwake, setKeepAwake] = useState(() => storage.get(STORAGE_KEYS.keepAwake, true))
-  const [zoomLevel, setZoomLevel] = useState(() => storage.get(STORAGE_KEYS.zoomLevel, 'normal')) // normal | medium | large
+  const [zoomed, setZoomed] = useState(() => storage.get(STORAGE_KEYS.zoomed, false))
   const [autoHide, setAutoHide] = useState(() => storage.get(STORAGE_KEYS.autoHide, true))
   const [showSettings, setShowSettings] = useState(false)
   const [showNotesList, setShowNotesList] = useState(false)
   const [resumePrompt, setResumePrompt] = useState(null)
 
-  // Persistance
   useEffect(() => { storage.set(STORAGE_KEYS.lastPage, pdfPage) }, [pdfPage])
   useEffect(() => { storage.set(STORAGE_KEYS.bookmarks, bookmarks) }, [bookmarks])
   useEffect(() => { storage.set(STORAGE_KEYS.notes, notes) }, [notes])
   useEffect(() => { storage.set(STORAGE_KEYS.theme, theme) }, [theme])
   useEffect(() => { storage.set(STORAGE_KEYS.keepAwake, keepAwake) }, [keepAwake])
-  useEffect(() => { storage.set(STORAGE_KEYS.zoomLevel, zoomLevel) }, [zoomLevel])
+  useEffect(() => { storage.set(STORAGE_KEYS.zoomed, zoomed) }, [zoomed])
   useEffect(() => { storage.set(STORAGE_KEYS.autoHide, autoHide) }, [autoHide])
 
-  // Marquer "dernière activité" périodiquement
   useEffect(() => {
     const updateLastSeen = () => storage.set(STORAGE_KEYS.lastSeen, {
       page: pdfPage,
       ts: Date.now()
     })
     updateLastSeen()
-    const interval = setInterval(updateLastSeen, 30000) // toutes les 30s
+    const interval = setInterval(updateLastSeen, 30000)
     return () => clearInterval(interval)
   }, [pdfPage])
 
-  // Vérifier au démarrage s'il faut proposer "Reprendre"
   useEffect(() => {
     if (showWelcome) return
     const lastSeen = storage.get(STORAGE_KEYS.lastSeen, null)
@@ -81,13 +77,11 @@ export default function App() {
     if (elapsed >= RESUME_THRESHOLD_MS && lastSeen.page && lastSeen.page !== pdfPage) {
       setResumePrompt({ page: lastSeen.page, elapsed })
     } else if (elapsed >= RESUME_THRESHOLD_MS && lastSeen.page) {
-      // Même page mais longue absence : montrer aussi (utile si l'utilisateur a bookmarked ailleurs)
       setResumePrompt({ page: lastSeen.page, elapsed, sameAsCurrent: true })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showWelcome])
 
-  // Thème manuel
   useEffect(() => {
     const root = document.documentElement
     if (theme === 'auto') {
@@ -97,7 +91,6 @@ export default function App() {
     }
   }, [theme])
 
-  // Wake Lock
   useEffect(() => {
     if (!keepAwake) return
     let wakeLock = null
@@ -122,9 +115,7 @@ export default function App() {
     return () => {
       cancelled = true
       document.removeEventListener('visibilitychange', onVisibility)
-      if (wakeLock) {
-        wakeLock.release().catch(() => {})
-      }
+      if (wakeLock) wakeLock.release().catch(() => {})
     }
   }, [keepAwake])
 
@@ -190,9 +181,7 @@ export default function App() {
     setResumePrompt(null)
   }
 
-  const dismissResume = () => {
-    setResumePrompt(null)
-  }
+  const dismissResume = () => setResumePrompt(null)
 
   if (showWelcome) {
     return (
@@ -219,10 +208,8 @@ export default function App() {
           bookmarks={bookmarks}
           notes={notes}
           onSaveNote={saveNote}
-          zoomLevel={zoomLevel}
-          onCycleZoom={() => {
-            setZoomLevel(z => z === 'normal' ? 'medium' : z === 'medium' ? 'large' : 'normal')
-          }}
+          zoomed={zoomed}
+          onToggleZoom={() => setZoomed(z => !z)}
           autoHide={autoHide}
         />
       )}
@@ -249,8 +236,8 @@ export default function App() {
           onThemeChange={setTheme}
           keepAwake={keepAwake}
           onKeepAwakeChange={setKeepAwake}
-          zoomLevel={zoomLevel}
-          onZoomLevelChange={setZoomLevel}
+          zoomed={zoomed}
+          onZoomedChange={setZoomed}
           autoHide={autoHide}
           onAutoHideChange={setAutoHide}
           notesCount={Object.keys(notes).length}
