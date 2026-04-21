@@ -180,7 +180,11 @@ export default function Reader({
         <div className="header-actions">
           <button
             className={`btn-icon ${zoomLevel !== 'normal' ? 'active' : ''}`}
-            onClick={onCycleZoom}
+            onClick={() => {
+              onCycleZoom()
+              const next = zoomLevel === 'normal' ? 'Moyen' : zoomLevel === 'medium' ? 'Grand' : 'Normal'
+              showToast(`Zoom : ${next}`)
+            }}
             aria-label={zoomLabel}
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
