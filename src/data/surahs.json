@@ -1,0 +1,1142 @@
+[
+  {
+    "num": 1,
+    "name_ar": "الفاتحة",
+    "name_tr": "Al-Fatiha",
+    "rub": 1,
+    "page_printed": 2,
+    "page_pdf": 4,
+    "ayat": 7,
+    "type": "M"
+  },
+  {
+    "num": 2,
+    "name_ar": "البقرة",
+    "name_tr": "Al-Baqara",
+    "rub": 1,
+    "page_printed": 3,
+    "page_pdf": 5,
+    "ayat": 286,
+    "type": "Md"
+  },
+  {
+    "num": 3,
+    "name_ar": "آل عمران",
+    "name_tr": "Al-Imran",
+    "rub": 1,
+    "page_printed": 37,
+    "page_pdf": 39,
+    "ayat": 200,
+    "type": "Md"
+  },
+  {
+    "num": 4,
+    "name_ar": "النساء",
+    "name_tr": "An-Nisa",
+    "rub": 1,
+    "page_printed": 57,
+    "page_pdf": 59,
+    "ayat": 176,
+    "type": "Md"
+  },
+  {
+    "num": 5,
+    "name_ar": "المائدة",
+    "name_tr": "Al-Ma'ida",
+    "rub": 1,
+    "page_printed": 78,
+    "page_pdf": 80,
+    "ayat": 120,
+    "type": "Md"
+  },
+  {
+    "num": 6,
+    "name_ar": "الأنعام",
+    "name_tr": "Al-An'am",
+    "rub": 1,
+    "page_printed": 94,
+    "page_pdf": 96,
+    "ayat": 165,
+    "type": "M"
+  },
+  {
+    "num": 7,
+    "name_ar": "الأعراف",
+    "name_tr": "Al-A'raf",
+    "rub": 2,
+    "page_printed": 2,
+    "page_pdf": 116,
+    "ayat": 206,
+    "type": "M"
+  },
+  {
+    "num": 8,
+    "name_ar": "الأنفال",
+    "name_tr": "Al-Anfal",
+    "rub": 2,
+    "page_printed": 24,
+    "page_pdf": 138,
+    "ayat": 75,
+    "type": "Md"
+  },
+  {
+    "num": 9,
+    "name_ar": "التوبة",
+    "name_tr": "At-Tawba",
+    "rub": 2,
+    "page_printed": 32,
+    "page_pdf": 146,
+    "ayat": 129,
+    "type": "Md"
+  },
+  {
+    "num": 10,
+    "name_ar": "يونس",
+    "name_tr": "Yunus",
+    "rub": 2,
+    "page_printed": 49,
+    "page_pdf": 163,
+    "ayat": 109,
+    "type": "M"
+  },
+  {
+    "num": 11,
+    "name_ar": "هود",
+    "name_tr": "Hud",
+    "rub": 2,
+    "page_printed": 60,
+    "page_pdf": 174,
+    "ayat": 123,
+    "type": "M"
+  },
+  {
+    "num": 12,
+    "name_ar": "يوسف",
+    "name_tr": "Yusuf",
+    "rub": 2,
+    "page_printed": 72,
+    "page_pdf": 186,
+    "ayat": 111,
+    "type": "M"
+  },
+  {
+    "num": 13,
+    "name_ar": "الرعد",
+    "name_tr": "Ar-Ra'd",
+    "rub": 2,
+    "page_printed": 83,
+    "page_pdf": 197,
+    "ayat": 43,
+    "type": "Md"
+  },
+  {
+    "num": 14,
+    "name_ar": "إبراهيم",
+    "name_tr": "Ibrahim",
+    "rub": 2,
+    "page_printed": 88,
+    "page_pdf": 202,
+    "ayat": 52,
+    "type": "M"
+  },
+  {
+    "num": 15,
+    "name_ar": "الحجر",
+    "name_tr": "Al-Hijr",
+    "rub": 2,
+    "page_printed": 94,
+    "page_pdf": 208,
+    "ayat": 99,
+    "type": "M"
+  },
+  {
+    "num": 16,
+    "name_ar": "النحل",
+    "name_tr": "An-Nahl",
+    "rub": 2,
+    "page_printed": 98,
+    "page_pdf": 212,
+    "ayat": 128,
+    "type": "M"
+  },
+  {
+    "num": 17,
+    "name_ar": "الإسراء",
+    "name_tr": "Al-Isra",
+    "rub": 2,
+    "page_printed": 109,
+    "page_pdf": 223,
+    "ayat": 111,
+    "type": "M"
+  },
+  {
+    "num": 18,
+    "name_ar": "الكهف",
+    "name_tr": "Al-Kahf",
+    "rub": 2,
+    "page_printed": 119,
+    "page_pdf": 233,
+    "ayat": 110,
+    "type": "M"
+  },
+  {
+    "num": 19,
+    "name_ar": "مريم",
+    "name_tr": "Maryam",
+    "rub": 3,
+    "page_printed": 2,
+    "page_pdf": 244,
+    "ayat": 98,
+    "type": "M"
+  },
+  {
+    "num": 20,
+    "name_ar": "طه",
+    "name_tr": "Ta-Ha",
+    "rub": 3,
+    "page_printed": 10,
+    "page_pdf": 252,
+    "ayat": 135,
+    "type": "M"
+  },
+  {
+    "num": 21,
+    "name_ar": "الأنبياء",
+    "name_tr": "Al-Anbiya",
+    "rub": 3,
+    "page_printed": 18,
+    "page_pdf": 260,
+    "ayat": 112,
+    "type": "M"
+  },
+  {
+    "num": 22,
+    "name_ar": "الحج",
+    "name_tr": "Al-Hajj",
+    "rub": 3,
+    "page_printed": 27,
+    "page_pdf": 269,
+    "ayat": 78,
+    "type": "Md"
+  },
+  {
+    "num": 23,
+    "name_ar": "المؤمنون",
+    "name_tr": "Al-Mu'minun",
+    "rub": 3,
+    "page_printed": 35,
+    "page_pdf": 277,
+    "ayat": 118,
+    "type": "M"
+  },
+  {
+    "num": 24,
+    "name_ar": "النور",
+    "name_tr": "An-Nur",
+    "rub": 3,
+    "page_printed": 42,
+    "page_pdf": 284,
+    "ayat": 64,
+    "type": "Md"
+  },
+  {
+    "num": 25,
+    "name_ar": "الفرقان",
+    "name_tr": "Al-Furqan",
+    "rub": 3,
+    "page_printed": 51,
+    "page_pdf": 293,
+    "ayat": 77,
+    "type": "M"
+  },
+  {
+    "num": 26,
+    "name_ar": "الشعراء",
+    "name_tr": "Ash-Shu'ara",
+    "rub": 3,
+    "page_printed": 57,
+    "page_pdf": 299,
+    "ayat": 227,
+    "type": "M"
+  },
+  {
+    "num": 27,
+    "name_ar": "النمل",
+    "name_tr": "An-Naml",
+    "rub": 3,
+    "page_printed": 67,
+    "page_pdf": 309,
+    "ayat": 93,
+    "type": "M"
+  },
+  {
+    "num": 28,
+    "name_ar": "القصص",
+    "name_tr": "Al-Qasas",
+    "rub": 3,
+    "page_printed": 74,
+    "page_pdf": 316,
+    "ayat": 88,
+    "type": "M"
+  },
+  {
+    "num": 29,
+    "name_ar": "العنكبوت",
+    "name_tr": "Al-Ankabut",
+    "rub": 3,
+    "page_printed": 83,
+    "page_pdf": 325,
+    "ayat": 69,
+    "type": "M"
+  },
+  {
+    "num": 30,
+    "name_ar": "الروم",
+    "name_tr": "Ar-Rum",
+    "rub": 3,
+    "page_printed": 90,
+    "page_pdf": 332,
+    "ayat": 60,
+    "type": "M"
+  },
+  {
+    "num": 31,
+    "name_ar": "لقمان",
+    "name_tr": "Luqman",
+    "rub": 3,
+    "page_printed": 95,
+    "page_pdf": 337,
+    "ayat": 34,
+    "type": "M"
+  },
+  {
+    "num": 32,
+    "name_ar": "السجدة",
+    "name_tr": "As-Sajda",
+    "rub": 3,
+    "page_printed": 99,
+    "page_pdf": 341,
+    "ayat": 30,
+    "type": "M"
+  },
+  {
+    "num": 33,
+    "name_ar": "الأحزاب",
+    "name_tr": "Al-Ahzab",
+    "rub": 3,
+    "page_printed": 101,
+    "page_pdf": 343,
+    "ayat": 73,
+    "type": "Md"
+  },
+  {
+    "num": 34,
+    "name_ar": "سبأ",
+    "name_tr": "Saba",
+    "rub": 3,
+    "page_printed": 109,
+    "page_pdf": 351,
+    "ayat": 54,
+    "type": "M"
+  },
+  {
+    "num": 35,
+    "name_ar": "فاطر",
+    "name_tr": "Fatir",
+    "rub": 3,
+    "page_printed": 115,
+    "page_pdf": 357,
+    "ayat": 45,
+    "type": "M"
+  },
+  {
+    "num": 36,
+    "name_ar": "يس",
+    "name_tr": "Ya-Sin",
+    "rub": 4,
+    "page_printed": 2,
+    "page_pdf": 364,
+    "ayat": 83,
+    "type": "M"
+  },
+  {
+    "num": 37,
+    "name_ar": "الصافات",
+    "name_tr": "As-Saffat",
+    "rub": 4,
+    "page_printed": 8,
+    "page_pdf": 370,
+    "ayat": 182,
+    "type": "M"
+  },
+  {
+    "num": 38,
+    "name_ar": "ص",
+    "name_tr": "Sad",
+    "rub": 4,
+    "page_printed": 15,
+    "page_pdf": 377,
+    "ayat": 88,
+    "type": "M"
+  },
+  {
+    "num": 39,
+    "name_ar": "الزمر",
+    "name_tr": "Az-Zumar",
+    "rub": 4,
+    "page_printed": 20,
+    "page_pdf": 382,
+    "ayat": 75,
+    "type": "M"
+  },
+  {
+    "num": 40,
+    "name_ar": "غافر",
+    "name_tr": "Ghafir",
+    "rub": 4,
+    "page_printed": 28,
+    "page_pdf": 390,
+    "ayat": 85,
+    "type": "M"
+  },
+  {
+    "num": 41,
+    "name_ar": "فصّلت",
+    "name_tr": "Fussilat",
+    "rub": 4,
+    "page_printed": 36,
+    "page_pdf": 398,
+    "ayat": 54,
+    "type": "M"
+  },
+  {
+    "num": 42,
+    "name_ar": "الشورى",
+    "name_tr": "Ash-Shura",
+    "rub": 4,
+    "page_printed": 42,
+    "page_pdf": 404,
+    "ayat": 53,
+    "type": "M"
+  },
+  {
+    "num": 43,
+    "name_ar": "الزخرف",
+    "name_tr": "Az-Zukhruf",
+    "rub": 4,
+    "page_printed": 47,
+    "page_pdf": 409,
+    "ayat": 89,
+    "type": "M"
+  },
+  {
+    "num": 44,
+    "name_ar": "الدخان",
+    "name_tr": "Ad-Dukhan",
+    "rub": 4,
+    "page_printed": 53,
+    "page_pdf": 415,
+    "ayat": 59,
+    "type": "M"
+  },
+  {
+    "num": 45,
+    "name_ar": "الجاثية",
+    "name_tr": "Al-Jathiya",
+    "rub": 4,
+    "page_printed": 56,
+    "page_pdf": 418,
+    "ayat": 37,
+    "type": "M"
+  },
+  {
+    "num": 46,
+    "name_ar": "الأحقاف",
+    "name_tr": "Al-Ahqaf",
+    "rub": 4,
+    "page_printed": 59,
+    "page_pdf": 421,
+    "ayat": 35,
+    "type": "M"
+  },
+  {
+    "num": 47,
+    "name_ar": "محمد",
+    "name_tr": "Muhammad",
+    "rub": 4,
+    "page_printed": 64,
+    "page_pdf": 426,
+    "ayat": 38,
+    "type": "Md"
+  },
+  {
+    "num": 48,
+    "name_ar": "الفتح",
+    "name_tr": "Al-Fath",
+    "rub": 4,
+    "page_printed": 67,
+    "page_pdf": 429,
+    "ayat": 29,
+    "type": "Md"
+  },
+  {
+    "num": 49,
+    "name_ar": "الحجرات",
+    "name_tr": "Al-Hujurat",
+    "rub": 4,
+    "page_printed": 71,
+    "page_pdf": 433,
+    "ayat": 18,
+    "type": "Md"
+  },
+  {
+    "num": 50,
+    "name_ar": "ق",
+    "name_tr": "Qaf",
+    "rub": 4,
+    "page_printed": 74,
+    "page_pdf": 436,
+    "ayat": 45,
+    "type": "M"
+  },
+  {
+    "num": 51,
+    "name_ar": "الذاريات",
+    "name_tr": "Adh-Dhariyat",
+    "rub": 4,
+    "page_printed": 76,
+    "page_pdf": 438,
+    "ayat": 60,
+    "type": "M"
+  },
+  {
+    "num": 52,
+    "name_ar": "الطور",
+    "name_tr": "At-Tur",
+    "rub": 4,
+    "page_printed": 79,
+    "page_pdf": 441,
+    "ayat": 49,
+    "type": "M"
+  },
+  {
+    "num": 53,
+    "name_ar": "النجم",
+    "name_tr": "An-Najm",
+    "rub": 4,
+    "page_printed": 82,
+    "page_pdf": 444,
+    "ayat": 62,
+    "type": "M"
+  },
+  {
+    "num": 54,
+    "name_ar": "القمر",
+    "name_tr": "Al-Qamar",
+    "rub": 4,
+    "page_printed": 84,
+    "page_pdf": 446,
+    "ayat": 55,
+    "type": "M"
+  },
+  {
+    "num": 55,
+    "name_ar": "الرحمن",
+    "name_tr": "Ar-Rahman",
+    "rub": 4,
+    "page_printed": 87,
+    "page_pdf": 449,
+    "ayat": 78,
+    "type": "Md"
+  },
+  {
+    "num": 56,
+    "name_ar": "الواقعة",
+    "name_tr": "Al-Waqi'a",
+    "rub": 4,
+    "page_printed": 90,
+    "page_pdf": 452,
+    "ayat": 96,
+    "type": "M"
+  },
+  {
+    "num": 57,
+    "name_ar": "الحديد",
+    "name_tr": "Al-Hadid",
+    "rub": 4,
+    "page_printed": 93,
+    "page_pdf": 455,
+    "ayat": 29,
+    "type": "Md"
+  },
+  {
+    "num": 58,
+    "name_ar": "المجادلة",
+    "name_tr": "Al-Mujadala",
+    "rub": 4,
+    "page_printed": 97,
+    "page_pdf": 459,
+    "ayat": 22,
+    "type": "Md"
+  },
+  {
+    "num": 59,
+    "name_ar": "الحشر",
+    "name_tr": "Al-Hashr",
+    "rub": 4,
+    "page_printed": 100,
+    "page_pdf": 462,
+    "ayat": 24,
+    "type": "Md"
+  },
+  {
+    "num": 60,
+    "name_ar": "الممتحنة",
+    "name_tr": "Al-Mumtahana",
+    "rub": 4,
+    "page_printed": 103,
+    "page_pdf": 465,
+    "ayat": 13,
+    "type": "Md"
+  },
+  {
+    "num": 61,
+    "name_ar": "الصف",
+    "name_tr": "As-Saff",
+    "rub": 4,
+    "page_printed": 105,
+    "page_pdf": 467,
+    "ayat": 14,
+    "type": "Md"
+  },
+  {
+    "num": 62,
+    "name_ar": "الجمعة",
+    "name_tr": "Al-Jumu'a",
+    "rub": 4,
+    "page_printed": 107,
+    "page_pdf": 469,
+    "ayat": 11,
+    "type": "Md"
+  },
+  {
+    "num": 63,
+    "name_ar": "المنافقون",
+    "name_tr": "Al-Munafiqun",
+    "rub": 4,
+    "page_printed": 108,
+    "page_pdf": 470,
+    "ayat": 11,
+    "type": "Md"
+  },
+  {
+    "num": 64,
+    "name_ar": "التغابن",
+    "name_tr": "At-Taghabun",
+    "rub": 4,
+    "page_printed": 110,
+    "page_pdf": 472,
+    "ayat": 18,
+    "type": "Md"
+  },
+  {
+    "num": 65,
+    "name_ar": "الطلاق",
+    "name_tr": "At-Talaq",
+    "rub": 4,
+    "page_printed": 112,
+    "page_pdf": 474,
+    "ayat": 12,
+    "type": "Md"
+  },
+  {
+    "num": 66,
+    "name_ar": "التحريم",
+    "name_tr": "At-Tahrim",
+    "rub": 4,
+    "page_printed": 114,
+    "page_pdf": 476,
+    "ayat": 12,
+    "type": "Md"
+  },
+  {
+    "num": 67,
+    "name_ar": "الملك",
+    "name_tr": "Al-Mulk",
+    "rub": 4,
+    "page_printed": 115,
+    "page_pdf": 477,
+    "ayat": 30,
+    "type": "M"
+  },
+  {
+    "num": 68,
+    "name_ar": "القلم",
+    "name_tr": "Al-Qalam",
+    "rub": 4,
+    "page_printed": 118,
+    "page_pdf": 480,
+    "ayat": 52,
+    "type": "M"
+  },
+  {
+    "num": 69,
+    "name_ar": "الحاقة",
+    "name_tr": "Al-Haqqa",
+    "rub": 4,
+    "page_printed": 120,
+    "page_pdf": 482,
+    "ayat": 52,
+    "type": "M"
+  },
+  {
+    "num": 70,
+    "name_ar": "المعارج",
+    "name_tr": "Al-Ma'arij",
+    "rub": 4,
+    "page_printed": 122,
+    "page_pdf": 484,
+    "ayat": 44,
+    "type": "M"
+  },
+  {
+    "num": 71,
+    "name_ar": "نوح",
+    "name_tr": "Nuh",
+    "rub": 4,
+    "page_printed": 124,
+    "page_pdf": 486,
+    "ayat": 28,
+    "type": "M"
+  },
+  {
+    "num": 72,
+    "name_ar": "الجن",
+    "name_tr": "Al-Jinn",
+    "rub": 4,
+    "page_printed": 126,
+    "page_pdf": 488,
+    "ayat": 28,
+    "type": "M"
+  },
+  {
+    "num": 73,
+    "name_ar": "المزّمّل",
+    "name_tr": "Al-Muzzammil",
+    "rub": 4,
+    "page_printed": 128,
+    "page_pdf": 490,
+    "ayat": 20,
+    "type": "M"
+  },
+  {
+    "num": 74,
+    "name_ar": "المدّثر",
+    "name_tr": "Al-Muddaththir",
+    "rub": 4,
+    "page_printed": 129,
+    "page_pdf": 491,
+    "ayat": 56,
+    "type": "M"
+  },
+  {
+    "num": 75,
+    "name_ar": "القيامة",
+    "name_tr": "Al-Qiyama",
+    "rub": 4,
+    "page_printed": 131,
+    "page_pdf": 493,
+    "ayat": 40,
+    "type": "M"
+  },
+  {
+    "num": 76,
+    "name_ar": "الإنسان",
+    "name_tr": "Al-Insan",
+    "rub": 4,
+    "page_printed": 133,
+    "page_pdf": 495,
+    "ayat": 31,
+    "type": "Md"
+  },
+  {
+    "num": 77,
+    "name_ar": "المرسلات",
+    "name_tr": "Al-Mursalat",
+    "rub": 4,
+    "page_printed": 134,
+    "page_pdf": 496,
+    "ayat": 50,
+    "type": "M"
+  },
+  {
+    "num": 78,
+    "name_ar": "النبأ",
+    "name_tr": "An-Naba",
+    "rub": 4,
+    "page_printed": 136,
+    "page_pdf": 498,
+    "ayat": 40,
+    "type": "M"
+  },
+  {
+    "num": 79,
+    "name_ar": "النازعات",
+    "name_tr": "An-Nazi'at",
+    "rub": 4,
+    "page_printed": 138,
+    "page_pdf": 500,
+    "ayat": 46,
+    "type": "M"
+  },
+  {
+    "num": 80,
+    "name_ar": "عبس",
+    "name_tr": "Abasa",
+    "rub": 4,
+    "page_printed": 139,
+    "page_pdf": 501,
+    "ayat": 42,
+    "type": "M"
+  },
+  {
+    "num": 81,
+    "name_ar": "التكوير",
+    "name_tr": "At-Takwir",
+    "rub": 4,
+    "page_printed": 140,
+    "page_pdf": 502,
+    "ayat": 29,
+    "type": "M"
+  },
+  {
+    "num": 82,
+    "name_ar": "الانفطار",
+    "name_tr": "Al-Infitar",
+    "rub": 4,
+    "page_printed": 141,
+    "page_pdf": 503,
+    "ayat": 19,
+    "type": "M"
+  },
+  {
+    "num": 83,
+    "name_ar": "المطفّفين",
+    "name_tr": "Al-Mutaffifin",
+    "rub": 4,
+    "page_printed": 142,
+    "page_pdf": 504,
+    "ayat": 36,
+    "type": "M"
+  },
+  {
+    "num": 84,
+    "name_ar": "الانشقاق",
+    "name_tr": "Al-Inshiqaq",
+    "rub": 4,
+    "page_printed": 144,
+    "page_pdf": 506,
+    "ayat": 25,
+    "type": "M"
+  },
+  {
+    "num": 85,
+    "name_ar": "البروج",
+    "name_tr": "Al-Buruj",
+    "rub": 4,
+    "page_printed": 145,
+    "page_pdf": 507,
+    "ayat": 22,
+    "type": "M"
+  },
+  {
+    "num": 86,
+    "name_ar": "الطارق",
+    "name_tr": "At-Tariq",
+    "rub": 4,
+    "page_printed": 146,
+    "page_pdf": 508,
+    "ayat": 17,
+    "type": "M"
+  },
+  {
+    "num": 87,
+    "name_ar": "الأعلى",
+    "name_tr": "Al-A'la",
+    "rub": 4,
+    "page_printed": 146,
+    "page_pdf": 508,
+    "ayat": 19,
+    "type": "M"
+  },
+  {
+    "num": 88,
+    "name_ar": "الغاشية",
+    "name_tr": "Al-Ghashiya",
+    "rub": 4,
+    "page_printed": 147,
+    "page_pdf": 509,
+    "ayat": 26,
+    "type": "M"
+  },
+  {
+    "num": 89,
+    "name_ar": "الفجر",
+    "name_tr": "Al-Fajr",
+    "rub": 4,
+    "page_printed": 148,
+    "page_pdf": 510,
+    "ayat": 30,
+    "type": "M"
+  },
+  {
+    "num": 90,
+    "name_ar": "البلد",
+    "name_tr": "Al-Balad",
+    "rub": 4,
+    "page_printed": 149,
+    "page_pdf": 511,
+    "ayat": 20,
+    "type": "M"
+  },
+  {
+    "num": 91,
+    "name_ar": "الشمس",
+    "name_tr": "Ash-Shams",
+    "rub": 4,
+    "page_printed": 150,
+    "page_pdf": 512,
+    "ayat": 15,
+    "type": "M"
+  },
+  {
+    "num": 92,
+    "name_ar": "الليل",
+    "name_tr": "Al-Layl",
+    "rub": 4,
+    "page_printed": 151,
+    "page_pdf": 513,
+    "ayat": 21,
+    "type": "M"
+  },
+  {
+    "num": 93,
+    "name_ar": "الضحى",
+    "name_tr": "Ad-Duha",
+    "rub": 4,
+    "page_printed": 151,
+    "page_pdf": 513,
+    "ayat": 11,
+    "type": "M"
+  },
+  {
+    "num": 94,
+    "name_ar": "الشرح",
+    "name_tr": "Ash-Sharh",
+    "rub": 4,
+    "page_printed": 152,
+    "page_pdf": 514,
+    "ayat": 8,
+    "type": "M"
+  },
+  {
+    "num": 95,
+    "name_ar": "التين",
+    "name_tr": "At-Tin",
+    "rub": 4,
+    "page_printed": 152,
+    "page_pdf": 514,
+    "ayat": 8,
+    "type": "M"
+  },
+  {
+    "num": 96,
+    "name_ar": "العلق",
+    "name_tr": "Al-Alaq",
+    "rub": 4,
+    "page_printed": 153,
+    "page_pdf": 515,
+    "ayat": 19,
+    "type": "M"
+  },
+  {
+    "num": 97,
+    "name_ar": "القدر",
+    "name_tr": "Al-Qadr",
+    "rub": 4,
+    "page_printed": 154,
+    "page_pdf": 516,
+    "ayat": 5,
+    "type": "M"
+  },
+  {
+    "num": 98,
+    "name_ar": "البيّنة",
+    "name_tr": "Al-Bayyina",
+    "rub": 4,
+    "page_printed": 154,
+    "page_pdf": 516,
+    "ayat": 8,
+    "type": "Md"
+  },
+  {
+    "num": 99,
+    "name_ar": "الزلزلة",
+    "name_tr": "Az-Zalzala",
+    "rub": 4,
+    "page_printed": 155,
+    "page_pdf": 517,
+    "ayat": 8,
+    "type": "Md"
+  },
+  {
+    "num": 100,
+    "name_ar": "العاديات",
+    "name_tr": "Al-Adiyat",
+    "rub": 4,
+    "page_printed": 155,
+    "page_pdf": 517,
+    "ayat": 11,
+    "type": "M"
+  },
+  {
+    "num": 101,
+    "name_ar": "القارعة",
+    "name_tr": "Al-Qari'a",
+    "rub": 4,
+    "page_printed": 156,
+    "page_pdf": 518,
+    "ayat": 11,
+    "type": "M"
+  },
+  {
+    "num": 102,
+    "name_ar": "التكاثر",
+    "name_tr": "At-Takathur",
+    "rub": 4,
+    "page_printed": 156,
+    "page_pdf": 518,
+    "ayat": 8,
+    "type": "M"
+  },
+  {
+    "num": 103,
+    "name_ar": "العصر",
+    "name_tr": "Al-Asr",
+    "rub": 4,
+    "page_printed": 157,
+    "page_pdf": 519,
+    "ayat": 3,
+    "type": "M"
+  },
+  {
+    "num": 104,
+    "name_ar": "الهُمَزة",
+    "name_tr": "Al-Humaza",
+    "rub": 4,
+    "page_printed": 157,
+    "page_pdf": 519,
+    "ayat": 9,
+    "type": "M"
+  },
+  {
+    "num": 105,
+    "name_ar": "الفيل",
+    "name_tr": "Al-Fil",
+    "rub": 4,
+    "page_printed": 158,
+    "page_pdf": 520,
+    "ayat": 5,
+    "type": "M"
+  },
+  {
+    "num": 106,
+    "name_ar": "قريش",
+    "name_tr": "Quraysh",
+    "rub": 4,
+    "page_printed": 158,
+    "page_pdf": 520,
+    "ayat": 4,
+    "type": "M"
+  },
+  {
+    "num": 107,
+    "name_ar": "الماعون",
+    "name_tr": "Al-Ma'un",
+    "rub": 4,
+    "page_printed": 158,
+    "page_pdf": 520,
+    "ayat": 7,
+    "type": "M"
+  },
+  {
+    "num": 108,
+    "name_ar": "الكوثر",
+    "name_tr": "Al-Kawthar",
+    "rub": 4,
+    "page_printed": 159,
+    "page_pdf": 521,
+    "ayat": 3,
+    "type": "M"
+  },
+  {
+    "num": 109,
+    "name_ar": "الكافرون",
+    "name_tr": "Al-Kafirun",
+    "rub": 4,
+    "page_printed": 159,
+    "page_pdf": 521,
+    "ayat": 6,
+    "type": "M"
+  },
+  {
+    "num": 110,
+    "name_ar": "النصر",
+    "name_tr": "An-Nasr",
+    "rub": 4,
+    "page_printed": 160,
+    "page_pdf": 522,
+    "ayat": 3,
+    "type": "Md"
+  },
+  {
+    "num": 111,
+    "name_ar": "المسد",
+    "name_tr": "Al-Masad",
+    "rub": 4,
+    "page_printed": 160,
+    "page_pdf": 522,
+    "ayat": 5,
+    "type": "M"
+  },
+  {
+    "num": 112,
+    "name_ar": "الإخلاص",
+    "name_tr": "Al-Ikhlas",
+    "rub": 4,
+    "page_printed": 160,
+    "page_pdf": 522,
+    "ayat": 4,
+    "type": "M"
+  },
+  {
+    "num": 113,
+    "name_ar": "الفلق",
+    "name_tr": "Al-Falaq",
+    "rub": 4,
+    "page_printed": 161,
+    "page_pdf": 523,
+    "ayat": 5,
+    "type": "M"
+  },
+  {
+    "num": 114,
+    "name_ar": "الناس",
+    "name_tr": "An-Nas",
+    "rub": 4,
+    "page_printed": 161,
+    "page_pdf": 523,
+    "ayat": 6,
+    "type": "M"
+  }
+]
