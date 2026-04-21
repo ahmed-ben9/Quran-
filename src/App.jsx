@@ -3,6 +3,7 @@ import Reader from './components/Reader.jsx'
 import SurahIndex from './components/SurahIndex.jsx'
 import Bookmarks from './components/Bookmarks.jsx'
 import Welcome from './components/Welcome.jsx'
+import Settings from './components/Settings.jsx'
 import surahs from './data/surahs.json'
 import './styles/app.css'
 
@@ -11,10 +12,12 @@ const STORAGE_KEYS = {
   lastPage: 'quran.lastPage',
   bookmarks: 'quran.bookmarks',
   firstRun: 'quran.firstRun',
-  downloaded: 'quran.downloaded'
+  downloaded: 'quran.downloaded',
+  immersive: 'quran.immersive',
+  theme: 'quran.theme',
+  keepAwake: 'quran.keepAwake'
 }
 
-// Wrapper sûr pour localStorage (Safari privé peut throw)
 const storage = {
   get(key, fallback = null) {
     try {
@@ -28,17 +31,63 @@ const storage = {
 }
 
 export default function App() {
-  const [view, setView] = useState('reader') // reader | index | bookmarks
+  const [view, setView] = useState('reader')
   const [pdfPage, setPdfPage] = useState(() => storage.get(STORAGE_KEYS.lastPage, 4))
   const [bookmarks, setBookmarks] = useState(() => storage.get(STORAGE_KEYS.bookmarks, []))
   const [showWelcome, setShowWelcome] = useState(() => !storage.get(STORAGE_KEYS.firstRun, false))
   const [downloaded, setDownloaded] = useState(() => storage.get(STORAGE_KEYS.downloaded, false))
+  const [immersive, setImmersive] = useState(() => storage.get(STORAGE_KEYS.immersive, false))
+  const [theme, setTheme] = useState(() => storage.get(STORAGE_KEYS.theme, 'auto'))
+  const [keepAwake, setKeepAwake] = useState(() => storage.get(STORAGE_KEYS.keepAwake, true))
+  const [showSettings, setShowSettings] = useState(false)
 
-  // Persistance automatique
   useEffect(() => { storage.set(STORAGE_KEYS.lastPage, pdfPage) }, [pdfPage])
   useEffect(() => { storage.set(STORAGE_KEYS.bookmarks, bookmarks) }, [bookmarks])
+  useEffect(() => { storage.set(STORAGE_KEYS.immersive, immersive) }, [immersive])
+  useEffect(() => { storage.set(STORAGE_KEYS.theme, theme) }, [theme])
+  useEffect(() => { storage.set(STORAGE_KEYS.keepAwake, keepAwake) }, [keepAwake])
 
-  // Trouver la sourate courante pour l'affichage header
+  // Thème manuel via data-theme sur <html>
+  useEffect(() => {
+    const root = document.documentElement
+    if (theme === 'auto') {
+      root.removeAttribute('data-theme')
+    } else {
+      root.setAttribute('data-theme', theme)
+    }
+  }, [theme])
+
+  // Wake Lock — empêcher l'écran de s'éteindre
+  useEffect(() => {
+    if (!keepAwake) return
+    let wakeLock = null
+    let cancelled = false
+
+    const requestLock = async () => {
+      if (!('wakeLock' in navigator)) return
+      try {
+        wakeLock = await navigator.wakeLock.request('screen')
+      } catch {}
+    }
+
+    const onVisibility = () => {
+      if (!cancelled && document.visibilityState === 'visible') {
+        requestLock()
+      }
+    }
+
+    requestLock()
+    document.addEventListener('visibilitychange', onVisibility)
+
+    return () => {
+      cancelled = true
+      document.removeEventListener('visibilitychange', onVisibility)
+      if (wakeLock) {
+        wakeLock.release().catch(() => {})
+      }
+    }
+  }, [keepAwake])
+
   const currentSurah = findSurahForPage(pdfPage)
 
   const goToPage = useCallback((p) => {
@@ -83,7 +132,7 @@ export default function App() {
   }
 
   return (
-    <div className="app">
+    <div className={`app ${immersive ? 'immersive' : ''}`}>
       {view === 'reader' && (
         <Reader
           pdfPage={pdfPage}
@@ -92,8 +141,11 @@ export default function App() {
           onPageChange={setPdfPage}
           onOpenIndex={() => setView('index')}
           onOpenBookmarks={() => setView('bookmarks')}
+          onOpenSettings={() => setShowSettings(true)}
           onAddBookmark={addBookmark}
           bookmarks={bookmarks}
+          immersive={immersive}
+          onToggleImmersive={() => setImmersive(i => !i)}
         />
       )}
       {view === 'index' && (
@@ -113,11 +165,19 @@ export default function App() {
           onClose={() => setView('reader')}
         />
       )}
+      {showSettings && (
+        <Settings
+          theme={theme}
+          onThemeChange={setTheme}
+          keepAwake={keepAwake}
+          onKeepAwakeChange={setKeepAwake}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
     </div>
   )
 }
 
-// Trouver la sourate qui contient une page donnée
 function findSurahForPage(pdfPage) {
   let current = null
   for (const s of surahs) {
