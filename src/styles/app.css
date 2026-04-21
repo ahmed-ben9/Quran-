@@ -133,44 +133,43 @@ button,
   border-radius: 2px;
   background: var(--paper-cream);
   touch-action: pinch-zoom;
+  transform-origin: center center;
   transition: transform 0.3s ease, max-width 0.3s ease, max-height 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* ZOOM MOYEN — élargit à toute la largeur, rogne top/bottom ~10% */
+/* ZOOM MOYEN — agrandit la page 1.3x, rogne les marges décoratives */
 .reader.zoom-medium .page-stage {
   padding: 0;
 }
 
 .reader.zoom-medium .page-image {
   max-width: 100vw;
-  max-height: 120vh;
-  max-height: 120dvh;
-  width: 100vw;
-  height: auto;
+  max-height: 100vh;
+  max-height: 100dvh;
+  transform: scale(1.3);
   box-shadow: none;
   border-radius: 0;
 }
 
-/* ZOOM GRAND — prend toute la largeur et zoome encore, rogne fort */
+/* ZOOM GRAND — agrandit 1.7x, texte très lisible */
 .reader.zoom-large .page-stage {
   padding: 0;
-  align-items: center;
 }
 
 .reader.zoom-large .page-image {
-  max-width: none;
-  max-height: none;
-  width: 135vw;
-  height: auto;
+  max-width: 100vw;
+  max-height: 100vh;
+  max-height: 100dvh;
+  transform: scale(1.7);
   box-shadow: none;
   border-radius: 0;
-  transform: translateX(0);
 }
 
-/* Sur écran large (tablette), limiter le zoom large */
+/* Sur écran large (tablette/desktop), le zoom scale se combine mal avec max-width */
 @media (min-width: 768px) {
+  .reader.zoom-medium .page-image,
   .reader.zoom-large .page-image {
-    width: min(135vw, 900px);
+    max-width: 500px;
   }
 }
 
