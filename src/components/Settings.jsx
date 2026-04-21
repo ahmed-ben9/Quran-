@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 export default function Settings({
   theme, onThemeChange,
   keepAwake, onKeepAwakeChange,
-  zoomLevel, onZoomLevelChange,
+  zoomed, onZoomedChange,
   autoHide, onAutoHideChange,
   notesCount, onOpenNotes,
   onClose
@@ -28,7 +28,7 @@ export default function Settings({
         </header>
 
         <div className="settings-body">
-          {/* THÈME */}
+          {/* APPARENCE */}
           <section className="settings-section">
             <h3>Apparence</h3>
             <p className="settings-hint">Choisir le thème de lecture</p>
@@ -79,70 +79,32 @@ export default function Settings({
             </div>
           </section>
 
-          {/* ZOOM */}
-          <section className="settings-section">
-            <h3>Taille de la page</h3>
-            <p className="settings-hint">Niveau de zoom pour la lecture</p>
-            <div className="zoom-options">
-              <button
-                className={`zoom-option ${zoomLevel === 'normal' ? 'active' : ''}`}
-                onClick={() => onZoomLevelChange('normal')}
-              >
-                <div className="zoom-preview zoom-preview-normal">
-                  <div className="zoom-page">
-                    <div className="zoom-page-lines">
-                      <span></span><span></span><span></span><span></span>
-                    </div>
-                  </div>
-                </div>
-                <span>Normal</span>
-                <small>Page entière</small>
-              </button>
-
-              <button
-                className={`zoom-option ${zoomLevel === 'medium' ? 'active' : ''}`}
-                onClick={() => onZoomLevelChange('medium')}
-              >
-                <div className="zoom-preview zoom-preview-medium">
-                  <div className="zoom-page medium">
-                    <div className="zoom-page-lines">
-                      <span></span><span></span><span></span><span></span>
-                    </div>
-                  </div>
-                </div>
-                <span>Moyen</span>
-                <small>Zoom léger</small>
-              </button>
-
-              <button
-                className={`zoom-option ${zoomLevel === 'large' ? 'active' : ''}`}
-                onClick={() => onZoomLevelChange('large')}
-              >
-                <div className="zoom-preview zoom-preview-large">
-                  <div className="zoom-page large">
-                    <div className="zoom-page-lines">
-                      <span></span><span></span><span></span><span></span>
-                    </div>
-                  </div>
-                </div>
-                <span>Grand</span>
-                <small>Texte maximal</small>
-              </button>
-            </div>
-            <p className="settings-hint" style={{ marginTop: 10 }}>
-              Vous pouvez aussi changer rapidement via l'icône loupe en haut.
-            </p>
-          </section>
-
           {/* LECTURE */}
           <section className="settings-section">
             <h3>Lecture</h3>
 
             <label className="settings-toggle">
               <div className="toggle-info">
+                <div className="toggle-label">Zoom sur le texte</div>
+                <div className="toggle-hint">
+                  Agrandit la zone de texte en rognant les marges décoratives
+                </div>
+              </div>
+              <div className={`toggle-switch ${zoomed ? 'on' : ''}`}>
+                <input
+                  type="checkbox"
+                  checked={zoomed}
+                  onChange={e => onZoomedChange(e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </div>
+            </label>
+
+            <label className="settings-toggle" style={{ marginTop: 16 }}>
+              <div className="toggle-info">
                 <div className="toggle-label">Masquer les barres automatiquement</div>
                 <div className="toggle-hint">
-                  Après 3 secondes d'inactivité — touchez la page pour les faire revenir
+                  Après 3 secondes d'inactivité. Touchez la page pour les faire revenir.
                 </div>
               </div>
               <div className={`toggle-switch ${autoHide ? 'on' : ''}`}>
@@ -171,6 +133,10 @@ export default function Settings({
                 <span className="toggle-slider"></span>
               </div>
             </label>
+
+            <p className="settings-hint" style={{ marginTop: 14 }}>
+              Astuce : en lecture, double-touchez la page pour activer ou désactiver le zoom rapidement.
+            </p>
           </section>
 
           {/* NOTES */}
