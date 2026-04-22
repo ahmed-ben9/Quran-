@@ -139,33 +139,28 @@ button,
 }
 
 /* ========== MODE ZOOM ACTIVÉ ========== */
-/* Approche simple : l'image fait exactement 100% de la largeur écran,
-   le texte est donc zoomé pour remplir la largeur sans rien perdre.
-   Le haut et le bas de la page (numéros de page, ornements) peuvent être
-   rognés par l'overflow, mais tout le texte reste visible. */
+/* Approche : on conserve l'image en "contain" (taille naturelle contrainte par l'écran),
+   puis on applique un scale 1.45 pour agrandir. Les marges décoratives de la page scannée
+   sortent hors écran, le texte occupe ainsi toute la largeur. La page reste centrée
+   verticalement et horizontalement, pas de scroll. */
 
 .reader.zoomed .page-stage {
   padding: 0;
   overflow: hidden;
-  align-items: flex-start;
 }
 
 .reader.zoomed .page-image {
-  width: 100vw;
-  max-width: 100vw;
-  max-height: none;
-  height: auto;
-  object-fit: fill;
+  transform: scale(1.45);
+  transform-origin: center center;
   box-shadow: none;
   border-radius: 0;
-  transform: none;
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-/* Sur écran large (tablette/desktop), limiter la taille */
+/* Sur écran large (tablette/desktop), limiter */
 @media (min-width: 768px) {
   .reader.zoomed .page-image {
-    width: min(100vw, 720px);
-    max-width: 720px;
+    max-width: 500px;
   }
 }
 
