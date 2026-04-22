@@ -139,43 +139,33 @@ button,
 }
 
 /* ========== MODE ZOOM ACTIVÉ ========== */
-/* Approche : on force la largeur à 132vw (plus grand que l'écran),
-   l'overflow du .page-stage rogne les bords, et translateX recentre le texte */
+/* Approche simple : l'image fait exactement 100% de la largeur écran,
+   le texte est donc zoomé pour remplir la largeur sans rien perdre.
+   Le haut et le bas de la page (numéros de page, ornements) peuvent être
+   rognés par l'overflow, mais tout le texte reste visible. */
 
 .reader.zoomed .page-stage {
   padding: 0;
   overflow: hidden;
+  align-items: flex-start;
 }
 
-/* Page impaire : texte décalé à gauche → translate vers la droite */
-.reader.zoomed[data-parity="odd"] .page-image {
-  width: 132vw;
-  max-width: none;
+.reader.zoomed .page-image {
+  width: 100vw;
+  max-width: 100vw;
   max-height: none;
   height: auto;
-  object-fit: contain;
-  transform: translateX(4vw);
+  object-fit: fill;
   box-shadow: none;
   border-radius: 0;
-}
-
-/* Page paire : texte décalé à droite → translate vers la gauche */
-.reader.zoomed[data-parity="even"] .page-image {
-  width: 132vw;
-  max-width: none;
-  max-height: none;
-  height: auto;
-  object-fit: contain;
-  transform: translateX(-4vw);
-  box-shadow: none;
-  border-radius: 0;
+  transform: none;
 }
 
 /* Sur écran large (tablette/desktop), limiter la taille */
 @media (min-width: 768px) {
-  .reader.zoomed[data-parity="odd"] .page-image,
-  .reader.zoomed[data-parity="even"] .page-image {
-    width: 720px;
+  .reader.zoomed .page-image {
+    width: min(100vw, 720px);
+    max-width: 720px;
   }
 }
 
