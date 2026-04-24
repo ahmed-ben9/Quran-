@@ -83,8 +83,9 @@ export default function Reader({
     touchStart.current = null
 
     // Swipe horizontal clair
+    // Sens arabe : swipe vers la droite = page suivante, swipe vers la gauche = page précédente
     if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5 && dt < 500) {
-      if (dx < 0) goNext()
+      if (dx > 0) goNext()
       else goPrev()
       return
     }
@@ -118,8 +119,9 @@ export default function Reader({
 
   useEffect(() => {
     const onKey = (e) => {
-      if (e.key === 'ArrowLeft') goNext()
-      else if (e.key === 'ArrowRight') goPrev()
+      // Sens arabe : flèche droite = suivant, flèche gauche = précédent
+      if (e.key === 'ArrowRight') goNext()
+      else if (e.key === 'ArrowLeft') goPrev()
       else if (e.key === 'Escape') {
         setShowJump(false)
         setShowNoteEditor(false)
