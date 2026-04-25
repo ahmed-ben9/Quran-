@@ -4,7 +4,9 @@ export default function Settings({
   theme, onThemeChange,
   keepAwake, onKeepAwakeChange,
   zoomed, onZoomedChange,
+  zoomScale, onZoomScaleChange,
   autoHide, onAutoHideChange,
+  hapticEnabled, onHapticEnabledChange,
   notesCount, onOpenNotes,
   onClose
 }) {
@@ -50,7 +52,6 @@ export default function Settings({
                 </div>
                 <span>Clair</span>
               </button>
-
               <button
                 className={`theme-option ${theme === 'dark' ? 'active' : ''}`}
                 onClick={() => onThemeChange('dark')}
@@ -62,7 +63,6 @@ export default function Settings({
                 </div>
                 <span>Sombre</span>
               </button>
-
               <button
                 className={`theme-option ${theme === 'auto' ? 'active' : ''}`}
                 onClick={() => onThemeChange('auto')}
@@ -79,15 +79,15 @@ export default function Settings({
             </div>
           </section>
 
-          {/* LECTURE */}
+          {/* ZOOM */}
           <section className="settings-section">
-            <h3>Lecture</h3>
+            <h3>Zoom</h3>
 
             <label className="settings-toggle">
               <div className="toggle-info">
-                <div className="toggle-label">Zoom sur le texte</div>
+                <div className="toggle-label">Activer le zoom sur le texte</div>
                 <div className="toggle-hint">
-                  Agrandit la zone de texte en rognant les marges décoratives
+                  Agrandit la page pour mieux lire. Double-tap sur la page pour activer/désactiver.
                 </div>
               </div>
               <div className={`toggle-switch ${zoomed ? 'on' : ''}`}>
@@ -100,7 +100,36 @@ export default function Settings({
               </div>
             </label>
 
-            <label className="settings-toggle" style={{ marginTop: 16 }}>
+            <div className="slider-block">
+              <div className="slider-header">
+                <span className="slider-label">Niveau de zoom</span>
+                <span className="slider-value">×{zoomScale.toFixed(2)}</span>
+              </div>
+              <input
+                type="range"
+                min="1.0"
+                max="2.0"
+                step="0.05"
+                value={zoomScale}
+                onChange={e => onZoomScaleChange(parseFloat(e.target.value))}
+                className="zoom-slider"
+              />
+              <div className="slider-marks">
+                <span>×1.0</span>
+                <span>×1.5</span>
+                <span>×2.0</span>
+              </div>
+              <p className="settings-hint" style={{ margin: '8px 0 0' }}>
+                Le réglage s'applique uniquement quand le zoom est activé. Valeur recommandée : ×1.45.
+              </p>
+            </div>
+          </section>
+
+          {/* LECTURE */}
+          <section className="settings-section">
+            <h3>Lecture</h3>
+
+            <label className="settings-toggle">
               <div className="toggle-info">
                 <div className="toggle-label">Masquer les barres automatiquement</div>
                 <div className="toggle-hint">
@@ -134,9 +163,22 @@ export default function Settings({
               </div>
             </label>
 
-            <p className="settings-hint" style={{ marginTop: 14 }}>
-              Astuce : en lecture, double-touchez la page pour activer ou désactiver le zoom rapidement.
-            </p>
+            <label className="settings-toggle" style={{ marginTop: 16 }}>
+              <div className="toggle-info">
+                <div className="toggle-label">Vibration tactile</div>
+                <div className="toggle-hint">
+                  Petite vibration au tournement de page et aux actions. Peut ne pas fonctionner sur tous les iPhones.
+                </div>
+              </div>
+              <div className={`toggle-switch ${hapticEnabled ? 'on' : ''}`}>
+                <input
+                  type="checkbox"
+                  checked={hapticEnabled}
+                  onChange={e => onHapticEnabledChange(e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </div>
+            </label>
           </section>
 
           {/* NOTES */}
