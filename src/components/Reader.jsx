@@ -1,4 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import surahs from '../data/surahs.json'
+import { haptic } from '../utils.js'
 
 const pageUrl = (n) => `/pages/${String(n).padStart(3, '0')}.webp`
 
@@ -6,7 +8,7 @@ export default function Reader({
   pdfPage, totalPages, surah,
   onPageChange, onOpenIndex, onOpenBookmarks, onOpenSettings,
   onAddBookmark, bookmarks, notes, onSaveNote,
-  zoomed, onToggleZoom, autoHide
+  zoomed, onToggleZoom, autoHide, hapticEnabled
 }) {
   const [showControls, setShowControls] = useState(true)
   const [jumpInput, setJumpInput] = useState('')
@@ -14,13 +16,22 @@ export default function Reader({
   const [toast, setToast] = useState(null)
   const [showNoteEditor, setShowNoteEditor] = useState(false)
   const [noteText, setNoteText] = useState('')
+  const [scrubbing, setScrubbing] = useState(null) // { page } pendant le scrub
   const pageStageRef = useRef(null)
+  const indicatorRef = useRef(null)
   const touchStart = useRef(null)
   const lastTapRef = useRef(0)
   const autoHideTimer = useRef(null)
   const toastTimer = useRef(null)
+  const scrubLongPressTimer = useRef(null)
+  const scrubLastHapticPage = useRef(null)
 
-  // Préchargement pages voisines
+  // Helper haptique
+  const buzz = useCallback((type = 'light') => {
+    if (hapticEnabled) haptic(type)
+  }, [hapticEnabled])
+
+  // Préchargement
   useEffect(() => {
     const preload = (n) => {
       if (n < 1 || n > totalPages) return
@@ -32,13 +43,29 @@ export default function Reader({
     preload(pdfPage + 2)
   }, [pdfPage, totalPages])
 
+  // Calcul de la progression dans la sourate courante
+  const surahProgress = useMemo(() => {
+    if (!surah) return null
+    // Trouver la sourate suivante pour calculer où finit la sourate courante
+    const idx = surahs.findIndex(s => s.num === surah.num)
+    const nextSurah = surahs[idx + 1]
+    const surahStart = surah.page_pdf
+    const surahEnd = nextSurah ? nextSurah.page_pdf - 1 : totalPages
+    const pagesInSurah = surahEnd - surahStart + 1
+    const currentPosInSurah = pdfPage - surahStart + 1
+    const percent = (currentPosInSurah / pagesInSurah) * 100
+    return {
+      current: currentPosInSurah,
+      total: pagesInSurah,
+      percent: Math.max(0, Math.min(100, percent))
+    }
+  }, [surah, pdfPage, totalPages])
+
   // Masquage auto
   const scheduleAutoHide = useCallback(() => {
     if (autoHideTimer.current) clearTimeout(autoHideTimer.current)
     if (!autoHide) return
-    autoHideTimer.current = setTimeout(() => {
-      setShowControls(false)
-    }, 3000)
+    autoHideTimer.current = setTimeout(() => setShowControls(false), 3000)
   }, [autoHide])
 
   useEffect(() => {
@@ -48,26 +75,23 @@ export default function Reader({
     }
   }, [showControls, scheduleAutoHide])
 
-  // À chaque changement de page, remontrer les contrôles
-  useEffect(() => {
-    setShowControls(true)
-  }, [pdfPage])
+  useEffect(() => { setShowControls(true) }, [pdfPage])
 
   const goPrev = useCallback(() => {
-    if (pdfPage > 1) onPageChange(pdfPage - 1)
-  }, [pdfPage, onPageChange])
+    if (pdfPage > 1) {
+      onPageChange(pdfPage - 1)
+      buzz('light')
+    }
+  }, [pdfPage, onPageChange, buzz])
 
   const goNext = useCallback(() => {
-    if (pdfPage < totalPages) onPageChange(pdfPage + 1)
-  }, [pdfPage, totalPages, onPageChange])
+    if (pdfPage < totalPages) {
+      onPageChange(pdfPage + 1)
+      buzz('light')
+    }
+  }, [pdfPage, totalPages, onPageChange, buzz])
 
-  const showToast = useCallback((msg) => {
-    setToast(msg)
-    if (toastTimer.current) clearTimeout(toastTimer.current)
-    toastTimer.current = setTimeout(() => setToast(null), 1500)
-  }, [])
-
-  // Touch handlers sur la page : swipe, tap, double-tap
+  // Touch handlers
   const onTouchStart = (e) => {
     if (e.touches.length > 1) { touchStart.current = null; return }
     const t = e.touches[0]
@@ -82,8 +106,7 @@ export default function Reader({
     const dt = Date.now() - touchStart.current.time
     touchStart.current = null
 
-    // Swipe horizontal clair
-    // Sens arabe : swipe vers la droite = page suivante, swipe vers la gauche = page précédente
+    // Swipe (sens arabe : droite = suivant)
     if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5 && dt < 500) {
       if (dx > 0) goNext()
       else goPrev()
@@ -96,19 +119,15 @@ export default function Reader({
       const timeSinceLastTap = now - lastTapRef.current
 
       if (timeSinceLastTap < 350) {
-        // DOUBLE TAP → toggle zoom
         lastTapRef.current = 0
         onToggleZoom()
+        buzz('medium')
         showToast(zoomed ? 'Zoom désactivé' : 'Zoom activé')
-        // Garder les contrôles visibles pendant 3s après un double-tap
         setShowControls(true)
       } else {
-        // Premier tap → mémoriser, et préparer single-tap avec léger délai
         lastTapRef.current = now
-        // Single tap = toggle des barres, mais on attend 350ms pour voir si c'est un double-tap
         setTimeout(() => {
           if (lastTapRef.current === now) {
-            // Toujours le même tap, pas de second → c'était un single tap
             setShowControls(s => !s)
             lastTapRef.current = 0
           }
@@ -119,7 +138,6 @@ export default function Reader({
 
   useEffect(() => {
     const onKey = (e) => {
-      // Sens arabe : flèche droite = suivant, flèche gauche = précédent
       if (e.key === 'ArrowRight') goNext()
       else if (e.key === 'ArrowLeft') goPrev()
       else if (e.key === 'Escape') {
@@ -138,11 +156,19 @@ export default function Reader({
       onPageChange(n)
       setJumpInput('')
       setShowJump(false)
+      buzz('medium')
     }
+  }
+
+  const showToast = (msg) => {
+    setToast(msg)
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast(null), 1500)
   }
 
   const doAddBookmark = () => {
     onAddBookmark()
+    buzz('medium')
     showToast('Marque-page ajouté')
   }
 
@@ -150,46 +176,108 @@ export default function Reader({
     const existing = notes[pdfPage]
     setNoteText(existing?.text || '')
     setShowNoteEditor(true)
+    buzz('light')
   }
 
   const saveNote = () => {
     onSaveNote(pdfPage, noteText)
     setShowNoteEditor(false)
+    buzz('medium')
     showToast(noteText.trim() ? 'Note enregistrée' : 'Note supprimée')
   }
 
   const deleteCurrentNote = () => {
     onSaveNote(pdfPage, '')
     setShowNoteEditor(false)
+    buzz('medium')
     showToast('Note supprimée')
   }
 
-  // Parité de la page : imprimée (PDF - offset selon rub)
-  // Mais pour l'effet visuel de pair/impair, utilisons la page imprimée
+  // ===== SCRUB PREVIEW =====
+  // Tenir l'indicateur de page > glisser horizontalement > prévisualiser les pages
+  const scrubFromX = useRef({ startX: 0, startPage: pdfPage, width: 0 })
+
+  const handleIndicatorPointerDown = (e) => {
+    // Démarrer un timer long-press pour activer le scrub après 250ms
+    const startX = e.clientX || (e.touches && e.touches[0]?.clientX) || 0
+    scrubFromX.current = {
+      startX,
+      startPage: pdfPage,
+      width: window.innerWidth
+    }
+    if (scrubLongPressTimer.current) clearTimeout(scrubLongPressTimer.current)
+    scrubLongPressTimer.current = setTimeout(() => {
+      setScrubbing({ page: pdfPage })
+      scrubLastHapticPage.current = pdfPage
+      buzz('medium')
+    }, 250)
+  }
+
+  const handleIndicatorPointerMove = (e) => {
+    if (!scrubbing) return
+    const x = e.clientX || (e.touches && e.touches[0]?.clientX) || 0
+    const dx = x - scrubFromX.current.startX
+    // Sensibilité : sur toute la largeur de l'écran on parcourt ~150 pages
+    const range = 150
+    const delta = Math.round((dx / scrubFromX.current.width) * range)
+    let newPage = scrubFromX.current.startPage + delta
+    newPage = Math.max(1, Math.min(totalPages, newPage))
+    if (newPage !== scrubbing.page) {
+      setScrubbing({ page: newPage })
+      // Haptique tous les ~5 pages
+      if (Math.abs(newPage - (scrubLastHapticPage.current || 0)) >= 5) {
+        buzz('light')
+        scrubLastHapticPage.current = newPage
+      }
+    }
+  }
+
+  const handleIndicatorPointerUp = () => {
+    if (scrubLongPressTimer.current) {
+      clearTimeout(scrubLongPressTimer.current)
+      scrubLongPressTimer.current = null
+    }
+    if (scrubbing) {
+      onPageChange(scrubbing.page)
+      buzz('medium')
+      setScrubbing(null)
+    } else {
+      // Tap simple : ouvrir le saut direct
+      setShowJump(true)
+    }
+  }
+
+  const handleIndicatorPointerCancel = () => {
+    if (scrubLongPressTimer.current) {
+      clearTimeout(scrubLongPressTimer.current)
+      scrubLongPressTimer.current = null
+    }
+    setScrubbing(null)
+  }
+
+  // Trouver la sourate de la page scrubbée
+  const scrubSurah = useMemo(() => {
+    if (!scrubbing) return null
+    let s = null
+    for (const surah of surahs) {
+      if (surah.page_pdf <= scrubbing.page) s = surah
+      else break
+    }
+    return s
+  }, [scrubbing])
+
   const printedPage = surah
     ? (pdfPage - (pdfPage > 362 ? 362 : pdfPage > 242 ? 242 : pdfPage > 114 ? 114 : 2))
     : pdfPage
   const rubNumber = pdfPage > 362 ? 4 : pdfPage > 242 ? 3 : pdfPage > 114 ? 2 : 1
-
-  // Dans le Mushaf : page impaire = page de droite (texte décalé vers la gauche de la page)
-  //                  page paire = page de gauche (texte décalé vers la droite de la page)
-  // Pour un zoom qui recentre le texte :
-  //   - Page impaire → translateX positif (vers la droite) pour recadrer le texte au centre de l'écran
-  //   - Page paire → translateX négatif
-  const isOddPrinted = printedPage % 2 === 1
-  const pageParity = isOddPrinted ? 'odd' : 'even'
-
   const isBookmarked = bookmarks.some(b => b.page === pdfPage)
   const hasNote = !!notes[pdfPage]
 
   return (
-    <div
-      className={`reader ${zoomed ? 'zoomed' : ''}`}
-      data-parity={pageParity}
-    >
+    <div className={`reader ${zoomed ? 'zoomed' : ''}`}>
       {/* Barre supérieure */}
       <header className={`reader-header ${showControls ? 'visible' : 'hidden'}`}>
-        <button className="btn-icon" onClick={onOpenIndex} aria-label="Sommaire">
+        <button className="btn-icon" onClick={() => { onOpenIndex(); buzz('light') }} aria-label="Sommaire">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <line x1="3" y1="6" x2="21" y2="6" />
             <line x1="3" y1="12" x2="21" y2="12" />
@@ -197,7 +285,7 @@ export default function Reader({
           </svg>
         </button>
 
-        <div className="reader-title" onClick={() => setShowJump(true)}>
+        <div className="reader-title" onClick={() => { setShowJump(true); buzz('light') }}>
           {surah && (
             <>
               <div className="surah-name-ar arabic">{surah.name_ar}</div>
@@ -213,10 +301,10 @@ export default function Reader({
             className={`btn-icon ${zoomed ? 'active' : ''}`}
             onClick={() => {
               onToggleZoom()
-              showToast(zoomed ? '🔍 Zoom désactivé' : '🔍 Zoom activé')
+              buzz('medium')
+              showToast(zoomed ? 'Zoom désactivé' : 'Zoom activé')
             }}
             aria-label="Zoom"
-            style={zoomed ? { background: '#c89b3c', color: '#faf6eb' } : {}}
           >
             {zoomed ? (
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -233,19 +321,34 @@ export default function Reader({
               </svg>
             )}
           </button>
-          <button className="btn-icon" onClick={onOpenSettings} aria-label="Réglages">
+          <button className="btn-icon" onClick={() => { onOpenSettings(); buzz('light') }} aria-label="Réglages">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="3" />
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
             </svg>
           </button>
-          <button className="btn-icon" onClick={onOpenBookmarks} aria-label="Marque-pages">
+          <button className="btn-icon" onClick={() => { onOpenBookmarks(); buzz('light') }} aria-label="Marque-pages">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
             </svg>
           </button>
         </div>
       </header>
+
+      {/* Barre de progression dans la sourate */}
+      {surahProgress && (
+        <div className={`surah-progress ${showControls ? 'visible' : 'hidden'}`}>
+          <div className="surah-progress-track">
+            <div
+              className="surah-progress-fill"
+              style={{ width: `${surahProgress.percent}%` }}
+            />
+          </div>
+          <div className="surah-progress-label">
+            {surahProgress.current} / {surahProgress.total}
+          </div>
+        </div>
+      )}
 
       {/* Page centrale */}
       <div
@@ -279,6 +382,16 @@ export default function Reader({
         </button>
       )}
 
+      {/* Scrub preview */}
+      {scrubbing && scrubSurah && (
+        <div className="scrub-preview">
+          <div className="scrub-page-num">{scrubbing.page}</div>
+          <div className="arabic scrub-surah-ar">{scrubSurah.name_ar}</div>
+          <div className="scrub-surah-tr">{scrubSurah.num}. {scrubSurah.name_tr}</div>
+          <div className="scrub-hint">Relâcher pour aller à cette page</div>
+        </div>
+      )}
+
       {/* Barre inférieure */}
       <footer className={`reader-footer ${showControls ? 'visible' : 'hidden'}`}>
         <button className="btn-nav" onClick={goPrev} disabled={pdfPage === 1} aria-label="Page précédente">
@@ -287,8 +400,16 @@ export default function Reader({
           </svg>
         </button>
 
-        <button className="page-indicator" onClick={() => setShowJump(true)}>
-          <div className="page-num">{pdfPage}</div>
+        <button
+          ref={indicatorRef}
+          className={`page-indicator ${scrubbing ? 'scrubbing' : ''}`}
+          onPointerDown={handleIndicatorPointerDown}
+          onPointerMove={handleIndicatorPointerMove}
+          onPointerUp={handleIndicatorPointerUp}
+          onPointerCancel={handleIndicatorPointerCancel}
+          onPointerLeave={handleIndicatorPointerCancel}
+        >
+          <div className="page-num">{scrubbing ? scrubbing.page : pdfPage}</div>
           <div className="page-total">sur {totalPages}</div>
           <div className="page-printed">Rub` {rubNumber} · page {printedPage}</div>
         </button>
@@ -309,7 +430,7 @@ export default function Reader({
         <button
           className={`btn-bookmark ${isBookmarked ? 'active' : ''}`}
           onClick={doAddBookmark}
-          aria-label="Ajouter un marque-page"
+          aria-label="Marque-page"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill={isBookmarked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
@@ -342,15 +463,14 @@ export default function Reader({
               <button type="button" className="btn-secondary" onClick={() => setShowJump(false)}>
                 Annuler
               </button>
-              <button type="submit" className="btn-primary">
-                Y aller
-              </button>
+              <button type="submit" className="btn-primary">Y aller</button>
             </div>
+            <p className="jump-tip">Astuce : appuyez longuement sur l'indicateur de page pour faire défiler les pages rapidement</p>
           </form>
         </div>
       )}
 
-      {/* Modal éditeur de note */}
+      {/* Modal note */}
       {showNoteEditor && (
         <div className="modal-backdrop" onClick={() => setShowNoteEditor(false)}>
           <div className="note-modal" onClick={e => e.stopPropagation()}>
@@ -379,16 +499,10 @@ export default function Reader({
             />
             <div className="note-actions">
               {hasNote && (
-                <button className="btn-danger" onClick={deleteCurrentNote}>
-                  Supprimer
-                </button>
+                <button className="btn-danger" onClick={deleteCurrentNote}>Supprimer</button>
               )}
-              <button className="btn-secondary" onClick={() => setShowNoteEditor(false)}>
-                Annuler
-              </button>
-              <button className="btn-primary" onClick={saveNote}>
-                Enregistrer
-              </button>
+              <button className="btn-secondary" onClick={() => setShowNoteEditor(false)}>Annuler</button>
+              <button className="btn-primary" onClick={saveNote}>Enregistrer</button>
             </div>
           </div>
         </div>
