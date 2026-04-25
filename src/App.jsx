@@ -19,7 +19,9 @@ const STORAGE_KEYS = {
   theme: 'quran.theme',
   keepAwake: 'quran.keepAwake',
   zoomed: 'quran.zoomed',
-  autoHide: 'quran.autoHide'
+  zoomScale: 'quran.zoomScale',
+  autoHide: 'quran.autoHide',
+  hapticEnabled: 'quran.hapticEnabled'
 }
 
 const storage = {
@@ -46,7 +48,9 @@ export default function App() {
   const [theme, setTheme] = useState(() => storage.get(STORAGE_KEYS.theme, 'auto'))
   const [keepAwake, setKeepAwake] = useState(() => storage.get(STORAGE_KEYS.keepAwake, true))
   const [zoomed, setZoomed] = useState(() => storage.get(STORAGE_KEYS.zoomed, false))
+  const [zoomScale, setZoomScale] = useState(() => storage.get(STORAGE_KEYS.zoomScale, 1.45))
   const [autoHide, setAutoHide] = useState(() => storage.get(STORAGE_KEYS.autoHide, true))
+  const [hapticEnabled, setHapticEnabled] = useState(() => storage.get(STORAGE_KEYS.hapticEnabled, true))
   const [showSettings, setShowSettings] = useState(false)
   const [showNotesList, setShowNotesList] = useState(false)
   const [resumePrompt, setResumePrompt] = useState(null)
@@ -57,7 +61,14 @@ export default function App() {
   useEffect(() => { storage.set(STORAGE_KEYS.theme, theme) }, [theme])
   useEffect(() => { storage.set(STORAGE_KEYS.keepAwake, keepAwake) }, [keepAwake])
   useEffect(() => { storage.set(STORAGE_KEYS.zoomed, zoomed) }, [zoomed])
+  useEffect(() => { storage.set(STORAGE_KEYS.zoomScale, zoomScale) }, [zoomScale])
   useEffect(() => { storage.set(STORAGE_KEYS.autoHide, autoHide) }, [autoHide])
+  useEffect(() => { storage.set(STORAGE_KEYS.hapticEnabled, hapticEnabled) }, [hapticEnabled])
+
+  // Exposer zoomScale en CSS variable
+  useEffect(() => {
+    document.documentElement.style.setProperty('--zoom-scale', zoomScale)
+  }, [zoomScale])
 
   useEffect(() => {
     const updateLastSeen = () => storage.set(STORAGE_KEYS.lastSeen, {
@@ -98,9 +109,7 @@ export default function App() {
 
     const requestLock = async () => {
       if (!('wakeLock' in navigator)) return
-      try {
-        wakeLock = await navigator.wakeLock.request('screen')
-      } catch {}
+      try { wakeLock = await navigator.wakeLock.request('screen') } catch {}
     }
 
     const onVisibility = () => {
@@ -111,7 +120,6 @@ export default function App() {
 
     requestLock()
     document.addEventListener('visibilitychange', onVisibility)
-
     return () => {
       cancelled = true
       document.removeEventListener('visibilitychange', onVisibility)
@@ -180,7 +188,6 @@ export default function App() {
     if (resumePrompt) goToPage(resumePrompt.page)
     setResumePrompt(null)
   }
-
   const dismissResume = () => setResumePrompt(null)
 
   if (showWelcome) {
@@ -211,6 +218,7 @@ export default function App() {
           zoomed={zoomed}
           onToggleZoom={() => setZoomed(z => !z)}
           autoHide={autoHide}
+          hapticEnabled={hapticEnabled}
         />
       )}
       {view === 'index' && (
@@ -238,8 +246,12 @@ export default function App() {
           onKeepAwakeChange={setKeepAwake}
           zoomed={zoomed}
           onZoomedChange={setZoomed}
+          zoomScale={zoomScale}
+          onZoomScaleChange={setZoomScale}
           autoHide={autoHide}
           onAutoHideChange={setAutoHide}
+          hapticEnabled={hapticEnabled}
+          onHapticEnabledChange={setHapticEnabled}
           notesCount={Object.keys(notes).length}
           onOpenNotes={() => { setShowSettings(false); setShowNotesList(true) }}
           onClose={() => setShowSettings(false)}
@@ -298,9 +310,7 @@ function ResumeBanner({ page, elapsed, sameAsCurrent, surah, onAccept, onDismiss
           </div>
         </div>
         {!sameAsCurrent && (
-          <button className="resume-btn" onClick={onAccept}>
-            Y aller
-          </button>
+          <button className="resume-btn" onClick={onAccept}>Y aller</button>
         )}
         <button className="resume-close" onClick={onDismiss} aria-label="Fermer">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
