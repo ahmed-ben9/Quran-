@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { fuzzyMatch, normalizeForSearch } from '../utils.js'
 
 export default function SurahIndex({ surahs, currentPage, onSelect, onClose, totalPages }) {
   const [query, setQuery] = useState('')
@@ -6,19 +7,24 @@ export default function SurahIndex({ surahs, currentPage, onSelect, onClose, tot
   const [jumpInput, setJumpInput] = useState('')
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
+    const q = query.trim()
     return surahs.filter(s => {
       if (activeRub !== 'all' && s.rub !== activeRub) return false
       if (!q) return true
-      return (
-        s.name_tr.toLowerCase().includes(q) ||
-        s.name_ar.includes(query.trim()) ||
-        String(s.num) === q
-      )
+
+      // Numéro exact
+      if (String(s.num) === q) return true
+
+      // Recherche dans nom arabe (substring exact pour l'arabe)
+      if (s.name_ar.includes(q)) return true
+
+      // Recherche tolérante (fuzzy) sur la translittération
+      if (fuzzyMatch(q, s.name_tr)) return true
+
+      return false
     })
   }, [surahs, query, activeRub])
 
-  // Trouver la sourate courante pour highlight
   const currentSurahNum = useMemo(() => {
     let current = null
     for (const s of surahs) {
@@ -57,7 +63,7 @@ export default function SurahIndex({ surahs, currentPage, onSelect, onClose, tot
         </svg>
         <input
           type="text"
-          placeholder="Rechercher une sourate…"
+          placeholder="Rechercher une sourate (fateha, baqra, 36…)"
           value={query}
           onChange={e => setQuery(e.target.value)}
         />
