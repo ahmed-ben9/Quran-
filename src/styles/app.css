@@ -1,7 +1,10 @@
 /* ===============================================
-   Application Coran - Styles v4
-   Zoom adaptatif pair/impair
+   Application Coran - Styles
    =============================================== */
+
+:root {
+  --zoom-scale: 1.45;
+}
 
 .app {
   position: fixed;
@@ -45,7 +48,6 @@ button,
   transition: background 0.3s ease;
 }
 
-/* Header */
 .reader-header {
   position: absolute;
   top: 0;
@@ -107,7 +109,50 @@ button,
   letter-spacing: 0.3px;
 }
 
-/* ===== Page centrale + ZOOM ADAPTATIF ===== */
+/* ===== Barre de progression sourate ===== */
+.surah-progress {
+  position: absolute;
+  top: calc(var(--sat) + 64px);
+  left: 16px;
+  right: 16px;
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.surah-progress.hidden {
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+}
+
+.surah-progress-track {
+  flex: 1;
+  height: 3px;
+  background: rgba(26, 35, 50, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.surah-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-deep), var(--gold));
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.surah-progress-label {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+/* ===== Page centrale + ZOOM ===== */
 .page-stage {
   flex: 1;
   display: flex;
@@ -134,15 +179,8 @@ button,
   background: var(--paper-cream);
   touch-action: pinch-zoom;
   transform-origin: center center;
-  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
-              max-width 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease;
 }
-
-/* ========== MODE ZOOM ACTIVÉ ========== */
-/* Approche : on conserve l'image en "contain" (taille naturelle contrainte par l'écran),
-   puis on applique un scale 1.45 pour agrandir. Les marges décoratives de la page scannée
-   sortent hors écran, le texte occupe ainsi toute la largeur. La page reste centrée
-   verticalement et horizontalement, pas de scroll. */
 
 .reader.zoomed .page-stage {
   padding: 0;
@@ -150,21 +188,86 @@ button,
 }
 
 .reader.zoomed .page-image {
-  transform: scale(1.45);
-  transform-origin: center center;
+  transform: scale(var(--zoom-scale));
   box-shadow: none;
   border-radius: 0;
-  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-/* Sur écran large (tablette/desktop), limiter */
 @media (min-width: 768px) {
   .reader.zoomed .page-image {
     max-width: 500px;
   }
 }
 
-/* Footer */
+/* ===== SCRUB PREVIEW ===== */
+.scrub-preview {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(26, 35, 50, 0.92);
+  color: var(--paper-cream);
+  border-radius: 18px;
+  padding: 20px 28px;
+  text-align: center;
+  z-index: 60;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: none;
+  animation: scrubIn 0.15s ease-out;
+}
+
+@keyframes scrubIn {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.92); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.scrub-page-num {
+  font-family: var(--font-display);
+  font-size: 42px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--gold);
+}
+
+.scrub-surah-ar {
+  font-family: var(--font-arabic);
+  font-size: 22px;
+  font-weight: 700;
+  margin-top: 8px;
+  letter-spacing: 0.5px;
+}
+
+.scrub-surah-tr {
+  font-family: var(--font-display);
+  font-size: 14px;
+  margin-top: 2px;
+  color: rgba(245, 239, 224, 0.8);
+}
+
+.scrub-hint {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  margin-top: 10px;
+  color: rgba(245, 239, 224, 0.55);
+  letter-spacing: 0.3px;
+}
+
+.page-indicator.scrubbing {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--paper-cream);
+  transform: scale(1.05);
+}
+
+.page-indicator.scrubbing .page-num,
+.page-indicator.scrubbing .page-total,
+.page-indicator.scrubbing .page-printed {
+  color: var(--paper-cream);
+}
+
+/* ===== Footer ===== */
 .reader-footer {
   position: absolute;
   bottom: 0;
@@ -277,7 +380,7 @@ button,
   background: var(--paper-cream);
   border: 1px solid rgba(26, 35, 50, 0.08);
   min-height: 44px;
-  transition: background 0.1s ease;
+  transition: background 0.1s ease, transform 0.15s ease, border-color 0.15s ease;
 }
 
 .page-indicator:active {
@@ -310,10 +413,9 @@ button,
   letter-spacing: 0.2px;
 }
 
-/* Note indicator en coin */
 .note-indicator {
   position: absolute;
-  top: calc(var(--sat) + 68px);
+  top: calc(var(--sat) + 90px);
   right: 12px;
   z-index: 5;
   width: 36px;
@@ -339,7 +441,7 @@ button,
   transform: scale(0.9);
 }
 
-/* Modals */
+/* ===== Modals ===== */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -395,6 +497,16 @@ button,
   display: flex;
   gap: 8px;
   margin-top: 16px;
+}
+
+.jump-tip {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--accent);
+  text-align: center;
+  margin: 12px 0 0;
+  line-height: 1.4;
+  font-style: italic;
 }
 
 .btn-primary {
@@ -496,9 +608,7 @@ button,
   to { opacity: 1; transform: translate(-50%, 0); }
 }
 
-/* ===============================================
-   RESUME BANNER
-   =============================================== */
+/* ===== Resume banner ===== */
 .resume-banner {
   position: fixed;
   top: calc(var(--sat) + 12px);
@@ -709,7 +819,6 @@ button,
 .theme-option.active {
   background: var(--paper-cream);
   border-color: var(--gold);
-  color: var(--ink);
 }
 
 .theme-option:active {
@@ -820,7 +929,88 @@ button,
   transform: translateX(22px);
 }
 
-/* Settings row (link style) */
+/* ===== Slider zoom ===== */
+.slider-block {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px dashed rgba(26, 35, 50, 0.08);
+}
+
+.slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+
+.slider-label {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.slider-value {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gold-deep);
+  min-width: 50px;
+  text-align: right;
+}
+
+.zoom-slider {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right,
+    rgba(26, 35, 50, 0.15) 0%,
+    rgba(26, 35, 50, 0.15) 100%);
+  outline: none;
+  margin: 4px 0;
+}
+
+.zoom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 26px;
+  height: 26px;
+  background: var(--gold);
+  border: 3px solid var(--paper-cream);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: transform 0.1s ease;
+}
+
+.zoom-slider::-webkit-slider-thumb:active {
+  transform: scale(1.15);
+}
+
+.zoom-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  background: var(--gold);
+  border: 3px solid var(--paper-cream);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  border-color: var(--paper-cream);
+}
+
+.slider-marks {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--accent);
+  margin-top: 4px;
+  letter-spacing: 0.3px;
+}
+
+/* Settings row */
 .settings-row {
   display: flex;
   align-items: center;
@@ -839,10 +1029,7 @@ button,
   background: var(--paper-warm);
 }
 
-.row-info {
-  flex: 1;
-  min-width: 0;
-}
+.row-info { flex: 1; min-width: 0; }
 
 .row-label {
   font-family: var(--font-display);
@@ -863,9 +1050,7 @@ button,
   flex-shrink: 0;
 }
 
-.settings-about {
-  text-align: center;
-}
+.settings-about { text-align: center; }
 
 .about-text {
   display: flex;
@@ -892,9 +1077,7 @@ button,
   font-style: italic;
 }
 
-/* ===============================================
-   NOTE EDITOR
-   =============================================== */
+/* Note editor */
 .note-modal {
   background: var(--paper-cream);
   border-radius: 16px;
@@ -923,7 +1106,6 @@ button,
   font-weight: 600;
   color: var(--ink);
   margin: 0;
-  letter-spacing: 0.3px;
 }
 
 .note-modal-meta {
@@ -973,9 +1155,7 @@ button,
   flex-wrap: wrap;
 }
 
-/* ===============================================
-   INDEX
-   =============================================== */
+/* Index */
 .index-view, .bookmarks-view, .notes-view {
   position: fixed;
   inset: 0;
@@ -1170,9 +1350,7 @@ button,
   border-color: var(--gold);
 }
 
-.surah-info {
-  min-width: 0;
-}
+.surah-info { min-width: 0; }
 
 .surah-names {
   display: flex;
@@ -1234,9 +1412,7 @@ button,
   font-size: 14px;
 }
 
-/* ===============================================
-   BOOKMARKS
-   =============================================== */
+/* Bookmarks */
 .bookmark-list {
   flex: 1;
   overflow-y: auto;
@@ -1285,10 +1461,7 @@ button,
   flex-shrink: 0;
 }
 
-.bookmark-info {
-  flex: 1;
-  min-width: 0;
-}
+.bookmark-info { flex: 1; min-width: 0; }
 
 .bookmark-label {
   font-family: var(--font-display);
@@ -1317,9 +1490,7 @@ button,
   color: var(--ink-soft);
 }
 
-.bm-date {
-  opacity: 0.8;
-}
+.bm-date { opacity: 0.8; }
 
 .btn-delete {
   width: 48px;
@@ -1401,9 +1572,7 @@ button,
   margin-top: 12px;
 }
 
-/* ===============================================
-   NOTES LIST
-   =============================================== */
+/* Notes list */
 .note-list {
   flex: 1;
   overflow-y: auto;
@@ -1463,9 +1632,7 @@ button,
   font-weight: 500;
 }
 
-.note-entry-date {
-  opacity: 0.75;
-}
+.note-entry-date { opacity: 0.75; }
 
 .note-entry-text {
   font-family: var(--font-display);
@@ -1497,9 +1664,7 @@ button,
   color: #b43c3c;
 }
 
-/* ===============================================
-   WELCOME
-   =============================================== */
+/* Welcome */
 .welcome {
   position: fixed;
   inset: 0;
@@ -1509,8 +1674,7 @@ button,
   padding: 30px 24px;
   padding-top: calc(var(--sat) + 30px);
   padding-bottom: calc(var(--sab) + 30px);
-  background:
-    radial-gradient(ellipse at top, var(--paper-cream) 0%, var(--paper) 60%, var(--paper-warm) 100%);
+  background: radial-gradient(ellipse at top, var(--paper-cream) 0%, var(--paper) 60%, var(--paper-warm) 100%);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -1567,10 +1731,7 @@ button,
   margin-bottom: 20px;
 }
 
-.welcome-text.small {
-  font-size: 14px;
-  color: var(--accent);
-}
+.welcome-text.small { font-size: 14px; color: var(--accent); }
 
 .welcome-card {
   background: var(--paper-cream);
@@ -1608,9 +1769,7 @@ button,
   margin-bottom: 12px;
 }
 
-.progress-wrap {
-  margin: 32px 0 16px;
-}
+.progress-wrap { margin: 32px 0 16px; }
 
 .progress-bar {
   width: 100%;
@@ -1643,13 +1802,7 @@ button,
   animation: slideUp 0.4s ease-out;
 }
 
-/* Responsive */
 @media (min-width: 768px) {
-  .page-image:not(.reader.zoomed *) {
-    max-width: 480px;
-    max-height: 85vh;
-  }
-
   .surah-list, .bookmark-list, .note-list {
     max-width: 640px;
     margin: 0 auto;
@@ -1657,9 +1810,7 @@ button,
   }
 }
 
-/* ===============================================
-   DARK MODE
-   =============================================== */
+/* Dark mode */
 :root[data-theme="dark"] {
   --paper: #1a1612;
   --paper-warm: #221d18;
@@ -1673,9 +1824,7 @@ button,
 }
 
 :root[data-theme="dark"] .page-image {
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.3),
-    0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.5);
   filter: invert(0.92) hue-rotate(180deg) brightness(1.05);
 }
 
@@ -1700,7 +1849,10 @@ button,
   background: #0f0c08;
 }
 
-/* Mode auto */
+:root[data-theme="dark"] .surah-progress-track {
+  background: rgba(232, 223, 200, 0.15);
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]):not([data-theme="dark"]) {
     --paper: #1a1612;
@@ -1715,9 +1867,7 @@ button,
   }
 
   :root:not([data-theme="light"]):not([data-theme="dark"]) .page-image {
-    box-shadow:
-      0 1px 3px rgba(0, 0, 0, 0.3),
-      0 8px 24px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.5);
     filter: invert(0.92) hue-rotate(180deg) brightness(1.05);
   }
 
@@ -1736,5 +1886,9 @@ button,
   :root:not([data-theme="light"]):not([data-theme="dark"]) .theme-preview-light {
     background: #f5efe0;
     color: #c89b3c;
+  }
+
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .surah-progress-track {
+    background: rgba(232, 223, 200, 0.15);
   }
 }
