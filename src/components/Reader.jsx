@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import surahs from '../data/surahs.json'
 import { haptic } from '../utils.js'
+import NoteEditor from './NoteEditor.jsx'
 
 const pageUrl = (n) => `/pages/${String(n).padStart(3, '0')}.webp`
 
 export default function Reader({
   pdfPage, totalPages, surah,
   onPageChange, onOpenIndex, onOpenBookmarks, onOpenSettings,
-  onAddBookmark, bookmarks, notes, onSaveNote,
+  onToggleBookmark, bookmarks,
+  notesForPage, allNotes, onSaveNote, onDeleteNote, warshReady,
   zoomed, onToggleZoom, autoHide, hapticEnabled
 }) {
   const [showControls, setShowControls] = useState(true)
@@ -15,8 +17,9 @@ export default function Reader({
   const [showJump, setShowJump] = useState(false)
   const [toast, setToast] = useState(null)
   const [showNoteEditor, setShowNoteEditor] = useState(false)
-  const [noteText, setNoteText] = useState('')
-  const [scrubbing, setScrubbing] = useState(null) // { page } pendant le scrub
+  const [editingNote, setEditingNote] = useState(null) // null = nouvelle note, ou {note}
+  const [scrubbing, setScrubbing] = useState(null)
+  const [swipingInZoom, setSwipingInZoom] = useState(false)
   const pageStageRef = useRef(null)
   const indicatorRef = useRef(null)
   const touchStart = useRef(null)
@@ -26,7 +29,6 @@ export default function Reader({
   const scrubLongPressTimer = useRef(null)
   const scrubLastHapticPage = useRef(null)
 
-  // Helper haptique
   const buzz = useCallback((type = 'light') => {
     if (hapticEnabled) haptic(type)
   }, [hapticEnabled])
@@ -46,7 +48,6 @@ export default function Reader({
   // Calcul de la progression dans la sourate courante
   const surahProgress = useMemo(() => {
     if (!surah) return null
-    // Trouver la sourate suivante pour calculer où finit la sourate courante
     const idx = surahs.findIndex(s => s.num === surah.num)
     const nextSurah = surahs[idx + 1]
     const surahStart = surah.page_pdf
@@ -98,6 +99,21 @@ export default function Reader({
     touchStart.current = { x: t.clientX, y: t.clientY, time: Date.now() }
   }
 
+  const onTouchMove = (e) => {
+    if (!touchStart.current) return
+    if (!zoomed) return
+    const t = e.touches[0]
+    const dx = t.clientX - touchStart.current.x
+    const dy = t.clientY - touchStart.current.y
+    // Si mouvement horizontal significatif en zoom → masquer barres
+    if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) {
+      if (!swipingInZoom) {
+        setSwipingInZoom(true)
+        setShowControls(false)
+      }
+    }
+  }
+
   const onTouchEnd = (e) => {
     if (!touchStart.current) return
     const t = e.changedTouches[0]
@@ -105,8 +121,9 @@ export default function Reader({
     const dy = t.clientY - touchStart.current.y
     const dt = Date.now() - touchStart.current.time
     touchStart.current = null
+    setSwipingInZoom(false)
 
-    // Swipe (sens arabe : droite = suivant)
+    // Swipe horizontal (sens arabe : droite = suivant)
     if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5 && dt < 500) {
       if (dx > 0) goNext()
       else goPrev()
@@ -166,39 +183,50 @@ export default function Reader({
     toastTimer.current = setTimeout(() => setToast(null), 1500)
   }
 
-  const doAddBookmark = () => {
-    onAddBookmark()
+  const isBookmarked = bookmarks.some(b => b.page === pdfPage)
+  const hasNote = notesForPage && notesForPage.length > 0
+
+  const doToggleBookmark = () => {
+    onToggleBookmark()
     buzz('medium')
-    showToast('Marque-page ajouté')
+    showToast(isBookmarked ? 'Marque-page retiré' : 'Marque-page ajouté')
   }
 
-  const openNoteEditor = () => {
-    const existing = notes[pdfPage]
-    setNoteText(existing?.text || '')
+  // ===== Note editor =====
+  const openNewNote = () => {
+    setEditingNote(null)
     setShowNoteEditor(true)
     buzz('light')
   }
 
-  const saveNote = () => {
-    onSaveNote(pdfPage, noteText)
-    setShowNoteEditor(false)
-    buzz('medium')
-    showToast(noteText.trim() ? 'Note enregistrée' : 'Note supprimée')
+  const openExistingNote = (note) => {
+    setEditingNote(note)
+    setShowNoteEditor(true)
+    buzz('light')
   }
 
-  const deleteCurrentNote = () => {
-    onSaveNote(pdfPage, '')
+  const handleSaveNote = (noteData) => {
+    onSaveNote({
+      ...noteData,
+      page: pdfPage,
+      existingId: editingNote?.id
+    })
+    setShowNoteEditor(false)
+    buzz('medium')
+    showToast(noteData.text?.trim() ? 'Note enregistrée' : 'Note supprimée')
+  }
+
+  const handleDeleteNote = (noteId) => {
+    onDeleteNote(noteId)
     setShowNoteEditor(false)
     buzz('medium')
     showToast('Note supprimée')
   }
 
   // ===== SCRUB PREVIEW =====
-  // Tenir l'indicateur de page > glisser horizontalement > prévisualiser les pages
   const scrubFromX = useRef({ startX: 0, startPage: pdfPage, width: 0 })
 
   const handleIndicatorPointerDown = (e) => {
-    // Démarrer un timer long-press pour activer le scrub après 250ms
     const startX = e.clientX || (e.touches && e.touches[0]?.clientX) || 0
     scrubFromX.current = {
       startX,
@@ -217,14 +245,12 @@ export default function Reader({
     if (!scrubbing) return
     const x = e.clientX || (e.touches && e.touches[0]?.clientX) || 0
     const dx = x - scrubFromX.current.startX
-    // Sensibilité : sur toute la largeur de l'écran on parcourt ~150 pages
     const range = 150
     const delta = Math.round((dx / scrubFromX.current.width) * range)
     let newPage = scrubFromX.current.startPage + delta
     newPage = Math.max(1, Math.min(totalPages, newPage))
     if (newPage !== scrubbing.page) {
       setScrubbing({ page: newPage })
-      // Haptique tous les ~5 pages
       if (Math.abs(newPage - (scrubLastHapticPage.current || 0)) >= 5) {
         buzz('light')
         scrubLastHapticPage.current = newPage
@@ -242,7 +268,6 @@ export default function Reader({
       buzz('medium')
       setScrubbing(null)
     } else {
-      // Tap simple : ouvrir le saut direct
       setShowJump(true)
     }
   }
@@ -255,7 +280,6 @@ export default function Reader({
     setScrubbing(null)
   }
 
-  // Trouver la sourate de la page scrubbée
   const scrubSurah = useMemo(() => {
     if (!scrubbing) return null
     let s = null
@@ -270,8 +294,6 @@ export default function Reader({
     ? (pdfPage - (pdfPage > 362 ? 362 : pdfPage > 242 ? 242 : pdfPage > 114 ? 114 : 2))
     : pdfPage
   const rubNumber = pdfPage > 362 ? 4 : pdfPage > 242 ? 3 : pdfPage > 114 ? 2 : 1
-  const isBookmarked = bookmarks.some(b => b.page === pdfPage)
-  const hasNote = !!notes[pdfPage]
 
   return (
     <div className={`reader ${zoomed ? 'zoomed' : ''}`}>
@@ -335,7 +357,7 @@ export default function Reader({
         </div>
       </header>
 
-      {/* Barre de progression dans la sourate */}
+      {/* Barre de progression dans la sourate (sens RTL) */}
       {surahProgress && (
         <div className={`surah-progress ${showControls ? 'visible' : 'hidden'}`}>
           <div className="surah-progress-track">
@@ -355,6 +377,7 @@ export default function Reader({
         ref={pageStageRef}
         className="page-stage"
         onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
         <img
@@ -366,20 +389,21 @@ export default function Reader({
         />
       </div>
 
-      {/* Badge note */}
-      {hasNote && (
-        <button
-          className={`note-indicator ${showControls ? 'visible' : 'hidden'}`}
-          onClick={openNoteEditor}
-          aria-label="Note"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" fill="var(--paper-cream)" />
-            <line x1="8" y1="13" x2="16" y2="13" stroke="var(--paper-cream)" />
-            <line x1="8" y1="17" x2="13" y2="17" stroke="var(--paper-cream)" />
-          </svg>
-        </button>
+      {/* Badges notes (gauche) */}
+      {hasNote && showControls && (
+        <div className="notes-indicators">
+          {notesForPage.map((note, i) => (
+            <button
+              key={note.id}
+              className="note-indicator"
+              onClick={() => openExistingNote(note)}
+              aria-label={`Note ${i + 1}`}
+              style={{ top: `calc(var(--sat) + ${100 + i * 44}px)` }}
+            >
+              <span className="note-indicator-num">{i + 1}</span>
+            </button>
+          ))}
+        </div>
       )}
 
       {/* Scrub preview */}
@@ -416,21 +440,21 @@ export default function Reader({
 
         <button
           className={`btn-note ${hasNote ? 'active' : ''}`}
-          onClick={openNoteEditor}
-          aria-label="Note"
+          onClick={openNewNote}
+          aria-label="Ajouter une note"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill={hasNote ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" fill="none" stroke={hasNote ? 'var(--paper-cream)' : 'currentColor'} />
-            <line x1="8" y1="13" x2="16" y2="13" stroke={hasNote ? 'var(--paper-cream)' : 'currentColor'} />
-            <line x1="8" y1="17" x2="13" y2="17" stroke={hasNote ? 'var(--paper-cream)' : 'currentColor'} />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="12" y1="11" x2="12" y2="17" />
+            <line x1="9" y1="14" x2="15" y2="14" />
           </svg>
         </button>
 
         <button
           className={`btn-bookmark ${isBookmarked ? 'active' : ''}`}
-          onClick={doAddBookmark}
-          aria-label="Marque-page"
+          onClick={doToggleBookmark}
+          aria-label={isBookmarked ? 'Retirer le marque-page' : 'Ajouter un marque-page'}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill={isBookmarked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
@@ -470,42 +494,18 @@ export default function Reader({
         </div>
       )}
 
-      {/* Modal note */}
+      {/* Note editor (nouveau) */}
       {showNoteEditor && (
-        <div className="modal-backdrop" onClick={() => setShowNoteEditor(false)}>
-          <div className="note-modal" onClick={e => e.stopPropagation()}>
-            <header className="note-modal-header">
-              <div>
-                <h3>Note</h3>
-                <div className="note-modal-meta">
-                  {surah && <span className="arabic">{surah.name_ar}</span>}
-                  <span>Page {pdfPage}</span>
-                </div>
-              </div>
-              <button className="btn-icon" onClick={() => setShowNoteEditor(false)} aria-label="Fermer">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </header>
-            <textarea
-              className="note-textarea"
-              value={noteText}
-              onChange={e => setNoteText(e.target.value)}
-              placeholder="Vos réflexions, questions, mémorisation…"
-              autoFocus
-              rows={8}
-            />
-            <div className="note-actions">
-              {hasNote && (
-                <button className="btn-danger" onClick={deleteCurrentNote}>Supprimer</button>
-              )}
-              <button className="btn-secondary" onClick={() => setShowNoteEditor(false)}>Annuler</button>
-              <button className="btn-primary" onClick={saveNote}>Enregistrer</button>
-            </div>
-          </div>
-        </div>
+        <NoteEditor
+          existingNote={editingNote}
+          defaultSurah={surah?.num || 1}
+          allNotes={allNotes}
+          surahs={surahs}
+          warshReady={warshReady}
+          onSave={handleSaveNote}
+          onDelete={handleDeleteNote}
+          onClose={() => setShowNoteEditor(false)}
+        />
       )}
 
       {toast && <div className="toast">{toast}</div>}
