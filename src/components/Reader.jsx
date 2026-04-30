@@ -247,7 +247,7 @@ export default function Reader({
     const dx = x - scrubFromX.current.startX
     const range = 150
     const delta = Math.round((dx / scrubFromX.current.width) * range)
-    let newPage = scrubFromX.current.startPage + delta
+    let newPage = scrubFromX.current.startPage - delta
     newPage = Math.max(1, Math.min(totalPages, newPage))
     if (newPage !== scrubbing.page) {
       setScrubbing({ page: newPage })
