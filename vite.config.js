@@ -52,6 +52,20 @@ export default defineConfig({
                 maxAgeSeconds: 60 * 60 * 24 * 365 // 1 an
               }
             }
+          },
+          {
+            urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/.*\.json$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'quran-warsh-text',
+              expiration: {
+                maxEntries: 5,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 an
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
           }
         ]
       }
