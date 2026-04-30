@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function Settings({
   theme, onThemeChange,
@@ -8,8 +8,11 @@ export default function Settings({
   autoHide, onAutoHideChange,
   hapticEnabled, onHapticEnabledChange,
   notesCount, onOpenNotes,
+  warshReady, onRedownloadWarsh,
   onClose
 }) {
+  const [downloading, setDownloading] = useState(false)
+  const [downloadStatus, setDownloadStatus] = useState(null)
   useEffect(() => {
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -199,6 +202,56 @@ export default function Settings({
                 <polyline points="9 18 15 12 9 6" />
               </svg>
             </button>
+          </section>
+
+          {/* TEXTE CORANIQUE */}
+          <section className="settings-section">
+            <h3>Texte coranique</h3>
+            <p className="settings-hint">
+              Texte du Saint Coran selon la lecture Warsh, utilisé pour afficher les versets dans vos notes.
+            </p>
+            <div className="warsh-status">
+              <div className="warsh-status-row">
+                <span className="warsh-status-label">État :</span>
+                <span className={`warsh-status-value ${warshReady ? 'ready' : 'pending'}`}>
+                  {warshReady ? '✓ Texte téléchargé' : 'Non téléchargé'}
+                </span>
+              </div>
+              <button
+                className="btn-secondary warsh-download-btn"
+                disabled={downloading}
+                onClick={async () => {
+                  setDownloading(true)
+                  setDownloadStatus(null)
+                  try {
+                    const ok = await onRedownloadWarsh()
+                    setDownloadStatus(ok === false ? 'error' : 'success')
+                  } catch {
+                    setDownloadStatus('error')
+                  } finally {
+                    setDownloading(false)
+                    setTimeout(() => setDownloadStatus(null), 3000)
+                  }
+                }}
+              >
+                {downloading
+                  ? 'Téléchargement…'
+                  : warshReady ? 'Re-télécharger' : 'Télécharger maintenant'}
+              </button>
+              {downloadStatus === 'error' && (
+                <div className="warsh-status-msg error">
+                  Échec. Vérifiez votre connexion Internet et réessayez.
+                </div>
+              )}
+              {downloadStatus === 'success' && (
+                <div className="warsh-status-msg success">
+                  Texte téléchargé avec succès.
+                </div>
+              )}
+            </div>
+            <p className="settings-hint" style={{ marginTop: 8, fontSize: 11 }}>
+              Source : fawazahmed0/quran-api (CC0 / domaine public). ~3 Mo, télécharge une seule fois.
+            </p>
           </section>
 
           {/* À PROPOS */}
