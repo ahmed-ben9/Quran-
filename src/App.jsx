@@ -6,6 +6,7 @@ import Welcome from './components/Welcome.jsx'
 import Settings from './components/Settings.jsx'
 import Notes from './components/Notes.jsx'
 import surahs from './data/surahs.json'
+import { preloadWarsh, isWarshDownloaded, downloadWarshText } from './quranText.js'
 import './styles/app.css'
 
 const TOTAL_PAGES = 532
@@ -14,6 +15,8 @@ const STORAGE_KEYS = {
   lastSeen: 'quran.lastSeen',
   bookmarks: 'quran.bookmarks',
   notes: 'quran.notes',
+  notesV2: 'quran.notesV2',
+  notesMigrated: 'quran.notesMigrated',
   firstRun: 'quran.firstRun',
   downloaded: 'quran.downloaded',
   theme: 'quran.theme',
@@ -38,11 +41,48 @@ const storage = {
 
 const RESUME_THRESHOLD_MS = 30 * 60 * 1000
 
+/**
+ * Migrer les anciennes notes (clé = page) vers la nouvelle structure (clé = noteId)
+ * Ancien format : notes[pageNum] = { text, updatedAt, surah }
+ * Nouveau format : notes[noteId] = { id, page, surah, verse, text, updatedAt }
+ *
+ * Pour les anciennes notes, on assigne verse=1 par défaut (l'utilisateur pourra rééditer)
+ */
+function migrateOldNotes() {
+  const alreadyMigrated = storage.get(STORAGE_KEYS.notesMigrated, false)
+  if (alreadyMigrated) {
+    return storage.get(STORAGE_KEYS.notesV2, {})
+  }
+
+  const oldNotes = storage.get(STORAGE_KEYS.notes, {})
+  const newNotes = {}
+  let counter = Date.now()
+
+  for (const [pageStr, oldNote] of Object.entries(oldNotes)) {
+    const page = parseInt(pageStr, 10)
+    if (isNaN(page) || !oldNote || !oldNote.text) continue
+    const noteId = `n${counter++}`
+    newNotes[noteId] = {
+      id: noteId,
+      page,
+      surah: oldNote.surah || null,
+      verse: 1, // valeur par défaut, à éditer
+      text: oldNote.text,
+      updatedAt: oldNote.updatedAt || Date.now(),
+      legacy: true // marqueur pour indiquer migration
+    }
+  }
+
+  storage.set(STORAGE_KEYS.notesV2, newNotes)
+  storage.set(STORAGE_KEYS.notesMigrated, true)
+  return newNotes
+}
+
 export default function App() {
   const [view, setView] = useState('reader')
   const [pdfPage, setPdfPage] = useState(() => storage.get(STORAGE_KEYS.lastPage, 4))
   const [bookmarks, setBookmarks] = useState(() => storage.get(STORAGE_KEYS.bookmarks, []))
-  const [notes, setNotes] = useState(() => storage.get(STORAGE_KEYS.notes, {}))
+  const [notes, setNotes] = useState(() => migrateOldNotes())
   const [showWelcome, setShowWelcome] = useState(() => !storage.get(STORAGE_KEYS.firstRun, false))
   const [downloaded, setDownloaded] = useState(() => storage.get(STORAGE_KEYS.downloaded, false))
   const [theme, setTheme] = useState(() => storage.get(STORAGE_KEYS.theme, 'auto'))
@@ -54,16 +94,33 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false)
   const [showNotesList, setShowNotesList] = useState(false)
   const [resumePrompt, setResumePrompt] = useState(null)
+  const [warshReady, setWarshReady] = useState(() => isWarshDownloaded())
 
   useEffect(() => { storage.set(STORAGE_KEYS.lastPage, pdfPage) }, [pdfPage])
   useEffect(() => { storage.set(STORAGE_KEYS.bookmarks, bookmarks) }, [bookmarks])
-  useEffect(() => { storage.set(STORAGE_KEYS.notes, notes) }, [notes])
+  useEffect(() => { storage.set(STORAGE_KEYS.notesV2, notes) }, [notes])
   useEffect(() => { storage.set(STORAGE_KEYS.theme, theme) }, [theme])
   useEffect(() => { storage.set(STORAGE_KEYS.keepAwake, keepAwake) }, [keepAwake])
   useEffect(() => { storage.set(STORAGE_KEYS.zoomed, zoomed) }, [zoomed])
   useEffect(() => { storage.set(STORAGE_KEYS.zoomScale, zoomScale) }, [zoomScale])
   useEffect(() => { storage.set(STORAGE_KEYS.autoHide, autoHide) }, [autoHide])
   useEffect(() => { storage.set(STORAGE_KEYS.hapticEnabled, hapticEnabled) }, [hapticEnabled])
+
+  // Précharger Warsh en mémoire au démarrage si déjà téléchargé
+  useEffect(() => {
+    if (warshReady) preloadWarsh()
+  }, [warshReady])
+
+  // Si pas téléchargé et online, télécharger en arrière-plan
+  useEffect(() => {
+    if (warshReady) return
+    if (!navigator.onLine) return
+    let cancelled = false
+    downloadWarshText().then(success => {
+      if (success && !cancelled) setWarshReady(true)
+    })
+    return () => { cancelled = true }
+  }, [warshReady])
 
   // Exposer zoomScale en CSS variable
   useEffect(() => {
@@ -135,41 +192,96 @@ export default function App() {
     setView('reader')
   }, [])
 
-  const addBookmark = useCallback((label) => {
-    const bm = {
-      id: Date.now(),
-      page: pdfPage,
-      label: label || (currentSurah ? `${currentSurah.name_tr}` : `Page ${pdfPage}`),
-      surah: currentSurah?.num ?? null,
-      createdAt: Date.now()
-    }
-    setBookmarks(prev => [bm, ...prev])
+  // ===== BOOKMARKS avec TOGGLE =====
+  const toggleBookmark = useCallback((label) => {
+    setBookmarks(prev => {
+      const existing = prev.find(b => b.page === pdfPage)
+      if (existing) {
+        // Retirer le bookmark de cette page
+        return prev.filter(b => b.page !== pdfPage)
+      } else {
+        // Ajouter
+        const bm = {
+          id: Date.now(),
+          page: pdfPage,
+          label: label || (currentSurah ? `${currentSurah.name_tr}` : `Page ${pdfPage}`),
+          surah: currentSurah?.num ?? null,
+          createdAt: Date.now()
+        }
+        return [bm, ...prev]
+      }
+    })
   }, [pdfPage, currentSurah])
 
   const removeBookmark = useCallback((id) => {
     setBookmarks(prev => prev.filter(b => b.id !== id))
   }, [])
 
-  const saveNote = useCallback((page, text) => {
+  // ===== NOTES par sourate+verset =====
+  /**
+   * saveNote: { surah, verse, text, page, existingId? }
+   * - Si existingId fourni → met à jour cette note
+   * - Sinon, si une note existe déjà pour (surah, verse) → la remplace
+   * - Sinon → crée une nouvelle note
+   */
+  const saveNote = useCallback((noteData) => {
+    const { surah, verse, text, page, existingId } = noteData
     setNotes(prev => {
       const next = { ...prev }
-      if (!text || !text.trim()) {
-        delete next[page]
+
+      if (existingId) {
+        // Mise à jour d'une note existante
+        if (next[existingId]) {
+          if (!text || !text.trim()) {
+            delete next[existingId]
+          } else {
+            next[existingId] = {
+              ...next[existingId],
+              surah,
+              verse,
+              text: text.trim(),
+              page: page || next[existingId].page,
+              updatedAt: Date.now(),
+              legacy: false
+            }
+          }
+        }
       } else {
-        next[page] = {
-          text: text.trim(),
-          updatedAt: Date.now(),
-          surah: findSurahForPage(page)?.num ?? null
+        // Vérifier si une note existe déjà pour ce couple sourate+verset
+        const existing = Object.values(next).find(n => n.surah === surah && n.verse === verse)
+        if (existing) {
+          if (!text || !text.trim()) {
+            delete next[existing.id]
+          } else {
+            next[existing.id] = {
+              ...existing,
+              text: text.trim(),
+              page: page || existing.page,
+              updatedAt: Date.now(),
+              legacy: false
+            }
+          }
+        } else if (text && text.trim()) {
+          // Nouvelle note
+          const id = `n${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
+          next[id] = {
+            id,
+            page: page || pdfPage,
+            surah,
+            verse,
+            text: text.trim(),
+            updatedAt: Date.now()
+          }
         }
       }
       return next
     })
-  }, [])
+  }, [pdfPage])
 
-  const deleteNote = useCallback((page) => {
+  const deleteNote = useCallback((noteId) => {
     setNotes(prev => {
       const next = { ...prev }
-      delete next[page]
+      delete next[noteId]
       return next
     })
   }, [])
@@ -200,6 +312,9 @@ export default function App() {
     )
   }
 
+  // Notes pour la page courante (peut être plusieurs)
+  const notesForCurrentPage = Object.values(notes).filter(n => n.page === pdfPage)
+
   return (
     <div className="app">
       {view === 'reader' && (
@@ -211,10 +326,14 @@ export default function App() {
           onOpenIndex={() => setView('index')}
           onOpenBookmarks={() => setView('bookmarks')}
           onOpenSettings={() => setShowSettings(true)}
-          onAddBookmark={addBookmark}
+          onToggleBookmark={toggleBookmark}
           bookmarks={bookmarks}
-          notes={notes}
+          notesForPage={notesForCurrentPage}
+          allNotes={notes}
           onSaveNote={saveNote}
+          onDeleteNote={deleteNote}
+          surahs={surahs}
+          warshReady={warshReady}
           zoomed={zoomed}
           onToggleZoom={() => setZoomed(z => !z)}
           autoHide={autoHide}
@@ -253,6 +372,12 @@ export default function App() {
           hapticEnabled={hapticEnabled}
           onHapticEnabledChange={setHapticEnabled}
           notesCount={Object.keys(notes).length}
+          warshReady={warshReady}
+          onRedownloadWarsh={async () => {
+            const ok = await downloadWarshText()
+            if (ok) setWarshReady(true)
+            return ok
+          }}
           onOpenNotes={() => { setShowSettings(false); setShowNotesList(true) }}
           onClose={() => setShowSettings(false)}
         />
@@ -261,8 +386,10 @@ export default function App() {
         <Notes
           notes={notes}
           surahs={surahs}
+          warshReady={warshReady}
           onSelect={goToPage}
           onDelete={deleteNote}
+          onSaveNote={saveNote}
           onClose={() => setShowNotesList(false)}
         />
       )}
