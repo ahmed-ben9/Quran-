@@ -1,100 +1,159 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import NoteEditor from './NoteEditor.jsx'
+import { getVerse, isWarshAvailable } from '../quranText.js'
 
-function formatDate(ts) {
-  const d = new Date(ts)
-  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
-}
+/**
+ * Liste des notes, groupées par sourate.
+ * Props:
+ *  - notes: dict {id -> note}
+ *  - surahs: liste de sourates
+ *  - warshReady: bool
+ *  - onSelect: (page) => void  (aller à la page de la note)
+ *  - onDelete: (noteId) => void
+ *  - onSaveNote: (noteData) => void
+ *  - onClose: () => void
+ */
+export default function Notes({ notes, surahs, warshReady, onSelect, onDelete, onSaveNote, onClose }) {
+  const [editingNote, setEditingNote] = useState(null)
 
-export default function Notes({ notes, surahs, onSelect, onDelete, onClose }) {
-  const [confirmPage, setConfirmPage] = useState(null)
+  // Grouper notes par sourate
+  const grouped = useMemo(() => {
+    const list = Object.values(notes)
+    list.sort((a, b) => {
+      // Tri par sourate ASC, puis verset ASC
+      const sa = a.surah || 999
+      const sb = b.surah || 999
+      if (sa !== sb) return sa - sb
+      return (a.verse || 0) - (b.verse || 0)
+    })
+    const groups = new Map()
+    for (const note of list) {
+      const key = note.surah || 0
+      if (!groups.has(key)) groups.set(key, [])
+      groups.get(key).push(note)
+    }
+    return groups
+  }, [notes])
 
-  // Convertir en tableau trié par date (plus récent en premier)
-  const entries = Object.entries(notes)
-    .map(([page, data]) => ({
-      page: parseInt(page, 10),
-      ...data
-    }))
-    .sort((a, b) => b.updatedAt - a.updatedAt)
+  const total = Object.keys(notes).length
 
-  const findSurah = (num) => surahs.find(s => s.num === num)
+  const handleSaveFromList = (noteData) => {
+    onSaveNote({
+      ...noteData,
+      page: editingNote?.page,
+      existingId: editingNote?.id
+    })
+    setEditingNote(null)
+  }
+
+  const handleDeleteFromList = (noteId) => {
+    onDelete(noteId)
+    setEditingNote(null)
+  }
 
   return (
-    <div className="notes-view page-transition">
-      <header className="index-header">
-        <button className="btn-icon" onClick={onClose} aria-label="Retour">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="19" y1="12" x2="5" y2="12" />
-            <polyline points="12 19 5 12 12 5" />
+    <div className="screen">
+      <header className="screen-header">
+        <button className="btn-icon" onClick={onClose} aria-label="Fermer">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </button>
-        <h1 className="index-title">Mes notes</h1>
-        <div style={{ width: 44 }} />
+        <h2>Notes</h2>
+        <div className="screen-counter">{total}</div>
       </header>
 
-      {entries.length === 0 ? (
-        <div className="empty-bookmarks">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-            <line x1="8" y1="13" x2="16" y2="13" />
-            <line x1="8" y1="17" x2="13" y2="17" />
-          </svg>
-          <p>Aucune note pour le moment.</p>
-          <p className="hint">
-            Touchez l'icône note en bas de l'écran pendant votre lecture.
-          </p>
-        </div>
-      ) : (
-        <div className="note-list">
-          {entries.map(entry => {
-            const surah = entry.surah ? findSurah(entry.surah) : null
-            return (
-              <div key={entry.page} className="note-entry">
-                <button
-                  className="note-entry-main"
-                  onClick={() => onSelect(entry.page)}
-                >
-                  <div className="note-entry-header">
-                    {surah && (
-                      <span className="arabic note-entry-ar">{surah.name_ar}</span>
-                    )}
-                    <span className="note-entry-page">Page {entry.page}</span>
-                    <span className="note-entry-date">{formatDate(entry.updatedAt)}</span>
-                  </div>
-                  <div className="note-entry-text">{entry.text}</div>
-                </button>
-                {confirmPage === entry.page ? (
-                  <div className="note-confirm">
-                    <button
-                      className="btn-confirm"
-                      onClick={() => { onDelete(entry.page); setConfirmPage(null) }}
-                    >
-                      Supprimer
-                    </button>
-                    <button
-                      className="btn-cancel"
-                      onClick={() => setConfirmPage(null)}
-                    >
-                      Annuler
-                    </button>
-                  </div>
+      <div className="screen-body">
+        {total === 0 && (
+          <div className="empty-state">
+            <p>Aucune note pour le moment.</p>
+            <p className="empty-hint">Touchez l'icône note dans la barre inférieure pour en créer une.</p>
+          </div>
+        )}
+
+        {Array.from(grouped.entries()).map(([surahNum, list]) => {
+          const surah = surahs.find(s => s.num === surahNum)
+          return (
+            <div key={surahNum} className="notes-group">
+              <div className="notes-group-header">
+                {surah ? (
+                  <>
+                    <span className="arabic notes-group-ar">{surah.name_ar}</span>
+                    <span className="notes-group-tr">{surah.num}. {surah.name_tr}</span>
+                  </>
                 ) : (
-                  <button
-                    className="btn-delete-note"
-                    onClick={() => setConfirmPage(entry.page)}
-                    aria-label="Supprimer"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="3 6 5 6 21 6" />
-                      <path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6" />
-                    </svg>
-                  </button>
+                  <span className="notes-group-tr">Sourate inconnue</span>
                 )}
+                <span className="notes-group-count">{list.length}</span>
               </div>
-            )
-          })}
-        </div>
+
+              {list.map(note => {
+                const verseTxt = (warshReady || isWarshAvailable()) ? getVerse(note.surah, note.verse) : null
+                return (
+                  <div key={note.id} className="note-item">
+                    <div className="note-item-meta">
+                      <span className="note-verse-tag">
+                        {note.surah}:{note.verse}{note.legacy && ' ⚠️'}
+                      </span>
+                      <span className="note-page-tag">page {note.page}</span>
+                      <span className="note-date">{formatDate(note.updatedAt)}</span>
+                    </div>
+
+                    {verseTxt && (
+                      <div className="arabic note-verse-text">{verseTxt}</div>
+                    )}
+
+                    <div className="note-item-text">{note.text}</div>
+
+                    <div className="note-item-actions">
+                      <button
+                        className="btn-tertiary"
+                        onClick={() => onSelect(note.page)}
+                      >
+                        Voir page
+                      </button>
+                      <button
+                        className="btn-tertiary"
+                        onClick={() => setEditingNote(note)}
+                      >
+                        Modifier
+                      </button>
+                      <button
+                        className="btn-tertiary danger"
+                        onClick={() => {
+                          if (window.confirm('Supprimer cette note ?')) onDelete(note.id)
+                        }}
+                      >
+                        Supprimer
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )
+        })}
+      </div>
+
+      {editingNote && (
+        <NoteEditor
+          existingNote={editingNote}
+          defaultSurah={editingNote.surah || 1}
+          allNotes={notes}
+          surahs={surahs}
+          warshReady={warshReady}
+          onSave={handleSaveFromList}
+          onDelete={handleDeleteFromList}
+          onClose={() => setEditingNote(null)}
+        />
       )}
     </div>
   )
+}
+
+function formatDate(ts) {
+  if (!ts) return ''
+  const d = new Date(ts)
+  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
 }
