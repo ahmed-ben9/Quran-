@@ -262,6 +262,7 @@ export default function Settings({
               <span>Mushaf Warsh `an Nāfi`</span>
               <span className="about-sub">Calligraphie maghrébine tunisienne</span>
               <span className="about-sub">Édition Dar Al-Mushaf, Beyrouth</span>
+              <span className="about-sub">App créée par Abu Hanaa</span>
             </p>
           </section>
         </div>
