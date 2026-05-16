@@ -33,6 +33,29 @@ export default function Reader({
     if (hapticEnabled) haptic(type)
   }, [hapticEnabled])
 
+  // Reset scroll au changement d'orientation (corrige le bug iOS)
+  useEffect(() => {
+    const handleOrientationChange = () => {
+      if (pageStageRef.current) {
+        pageStageRef.current.scrollTop = 0
+      }
+      // Force un reflow pour que iOS recalcule immédiatement le layout
+      requestAnimationFrame(() => {
+        if (pageStageRef.current) {
+          pageStageRef.current.style.display = 'none'
+          void pageStageRef.current.offsetHeight
+          pageStageRef.current.style.display = ''
+        }
+      })
+    }
+    const mq = window.matchMedia('(orientation: portrait)')
+    mq.addEventListener('change', handleOrientationChange)
+    window.addEventListener('orientationchange', handleOrientationChange)
+    return () => {
+      mq.removeEventListener('change', handleOrientationChange)
+      window.removeEventListener('orientationchange', handleOrientationChange)
+    }
+  }, [])
   // Préchargement
   useEffect(() => {
     const preload = (n) => {
