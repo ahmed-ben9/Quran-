@@ -221,6 +221,35 @@ input, textarea, select {
   transition: transform 0.2s ease;
 }
 
+/* MODE PAYSAGE : page large, scroll vertical */
+@media (orientation: landscape) {
+  .page-stage {
+    overflow-y: auto;
+    overflow-x: hidden;
+    align-items: flex-start;
+    justify-content: center;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+    /* Marges pour ne pas être caché sous header/footer */
+    padding-top: calc(var(--sat) + 60px);
+    padding-bottom: calc(var(--sab) + 80px);
+  }
+
+  .page-image {
+    width: 100%;
+    height: auto;
+    max-width: 100vw;
+    max-height: none;
+    object-fit: contain;
+  }
+
+  /* En zoom paysage, le scale s'applique aussi à la largeur */
+  .reader.zoomed .page-image {
+    width: calc(100% * var(--zoom-scale));
+    transform: none;
+  }
+}
+
 .reader.zoomed .page-image {
   transform: scale(var(--zoom-scale));
   transform-origin: center center;
